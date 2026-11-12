@@ -1,0 +1,1808 @@
+<!doctype html>
+<html lang="hu" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Biztonság: semmilyen hálózati kérés nem engedélyezett – az adatok nem hagyhatják el az eszközt.
+     (worker/manifest csak az offline működéshez és a főképernyő-ikonhoz kell, ugyanarról a helyről.) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; worker-src 'self'; manifest-src 'self'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#f4f5f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Vagyon">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Lili vagyonnyilvántartója</title>
+<style>
+:root{
+  --bg:#f4f5f1; --card:#ffffff; --card-2:#f9faf7; --line:#e7e8e2; --line-2:#d9dbd3;
+  --text:#16181c; --muted:#666b73; --faint:#9a9ea6;
+  --lime:#c4ef3a; --lime-2:#b2dd1e; --lime-ink:#1b2500; --lime-soft:#f1f8dc; --green:#4c7608;
+  --violet:#7656f5; --violet-soft:#f0ecff; --violet-ink:#4a2fc4;
+  --warn:#9a5b0c; --warn-soft:#fff3dd; --danger:#c73a3a; --danger-soft:#fdeceb;
+  --hero:#15161b; --hero-2:#1f2027; --hero-text:#ffffff; --hero-muted:#a9abb4;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.04);
+  --shadow-lg:0 24px 60px -16px rgba(16,24,40,.28);
+  --r:18px; --r-sm:11px;
+  --font:"Inter","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+[data-theme=dark]{
+  --bg:#0e0e13; --card:#17171e; --card-2:#1c1c24; --line:#262630; --line-2:#32323d;
+  --text:#f1f1f4; --muted:#a3a3b0; --faint:#6f6f7c;
+  --lime:#c6f432; --lime-2:#b5e622; --lime-ink:#172000; --lime-soft:rgba(198,244,50,.10); --green:#c6f432;
+  --violet:#9d82ff; --violet-soft:rgba(157,130,255,.14); --violet-ink:#c9bbff;
+  --warn:#f2b752; --warn-soft:rgba(242,183,82,.12); --danger:#ff6f6f; --danger-soft:rgba(255,111,111,.12);
+  --hero:#1b1b24; --hero-2:#23232e;
+  --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 24px 60px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--violet-ink)}
+.num-t,.big,.val,.a-val b{font-variant-numeric:tabular-nums}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.i.sm{width:15px;height:15px}
+.i.lg{width:22px;height:22px}
+[hidden]{display:none!important}
+
+.app{max-width:1160px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) calc(60px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left))}
+.dr-head{padding-top:calc(18px + env(safe-area-inset-top))!important}
+.dr-foot{padding-bottom:calc(14px + env(safe-area-inset-bottom))!important}
+input,select,textarea{font-size:16px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:13px;background:var(--hero);display:grid;place-items:center;position:relative;overflow:hidden}
+.logo::before{content:"";position:absolute;width:30px;height:30px;border-radius:50%;background:var(--lime);left:-6px;top:-8px;filter:blur(2px)}
+.logo::after{content:"";position:absolute;width:24px;height:24px;border-radius:50%;background:var(--violet);right:-6px;bottom:-6px;filter:blur(2px);opacity:.9}
+.logo span{position:relative;z-index:1;color:#fff;font-weight:700;font-size:18px}
+.brand h1{font-size:19px;margin:0;letter-spacing:-.01em}
+.brand p{margin:0;color:var(--muted);font-size:13px}
+.top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:12px;border:1px solid var(--line-2);background:var(--card);font-weight:550;font-size:14px;white-space:nowrap;transition:background .15s,border-color .15s,transform .05s}
+.btn:hover{border-color:var(--faint)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--lime);border-color:var(--lime);color:var(--lime-ink);box-shadow:0 6px 18px -8px rgba(150,200,0,.7)}
+.btn.primary:hover{background:var(--lime-2);border-color:var(--lime-2)}
+.btn.dark{background:var(--hero);border-color:var(--hero);color:#fff}
+[data-theme=dark] .btn.dark{background:var(--card-2);border-color:var(--line-2)}
+.btn.ghost{background:transparent}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.danger-ghost{background:transparent;color:var(--danger);border-color:transparent}
+.btn.danger-ghost:hover{background:var(--danger-soft);border-color:transparent}
+.btn.sm{height:32px;padding:0 11px;font-size:13px;border-radius:10px;gap:6px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.icon-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line-2);background:var(--card);display:inline-grid;place-items:center;color:var(--text)}
+.icon-btn:hover{border-color:var(--faint)}
+.icon-btn.sm{width:32px;height:32px;border-radius:10px;border-color:transparent;background:transparent;color:var(--muted)}
+.icon-btn.sm:hover{background:var(--card-2);color:var(--text)}
+.icon-btn[disabled]{opacity:.35;cursor:not-allowed}
+.link-btn{background:none;border:0;padding:6px 2px;color:var(--muted);font-weight:550;display:inline-flex;align-items:center;gap:6px}
+.link-btn:hover{color:var(--text)}
+.rate-chip{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:12px;border:1px dashed var(--line-2);background:transparent;font-size:13px;color:var(--muted)}
+.rate-chip b{color:var(--text);font-weight:600}
+.rate-chip:hover{border-style:solid;color:var(--text)}
+
+.save-state{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);padding:0 6px}
+.save-state .dot{width:7px;height:7px;border-radius:50%;background:var(--lime-2)}
+.save-state.warn .dot{background:#e0a020}
+
+/* banner */
+.banner{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:var(--warn-soft);color:var(--warn);margin-bottom:16px;font-size:14px;flex-wrap:wrap}
+.banner .grow{flex:1;min-width:200px}
+.banner.info{background:var(--violet-soft);color:var(--violet-ink)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:1.55fr 1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 16px;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;gap:6px;min-width:0;position:relative}
+button.stat{cursor:pointer;transition:border-color .15s,transform .1s}
+button.stat:hover{border-color:var(--line-2)}
+button.stat.on{border-color:var(--lime-2);box-shadow:0 0 0 3px var(--lime-soft)}
+button.stat.on.de{border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-soft)}
+.stat .lbl{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13.5px;font-weight:500}
+.stat .val{font-size:23px;font-weight:650;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .sub{font-size:12.5px;color:var(--faint)}
+.stat .ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--lime-soft);color:var(--green)}
+.hero{background:var(--hero);color:var(--hero-text);border-color:transparent;overflow:hidden;padding:20px 22px}
+.hero::before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(196,239,58,.55),rgba(196,239,58,0) 70%);right:-60px;top:-90px;pointer-events:none}
+.hero::after{content:"";position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(118,86,245,.55),rgba(118,86,245,0) 70%);right:40px;bottom:-130px;pointer-events:none}
+.hero>*{position:relative;z-index:1}
+.hero .lbl{color:var(--hero-muted)}
+.hero .big{font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1.1;white-space:nowrap}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--hero-muted)}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600}
+.hero .pill{background:rgba(196,239,58,.15);color:var(--lime);border:1px solid rgba(196,239,58,.35)}
+.split{display:flex;height:6px;border-radius:9px;overflow:hidden;background:rgba(255,255,255,.1);margin-top:6px}
+.split i{display:block;height:100%}
+.split .hu{background:var(--lime)} .split .de{background:var(--violet)}
+.hero .net{font-size:13px;color:var(--hero-muted)} .hero .net b{color:#fff}
+.hero-link{background:none;border:0;color:var(--hero-muted);padding:0;font-size:13px;display:inline-flex;align-items:center;gap:4px;margin-top:2px;align-self:flex-start}
+.hero-link:hover{color:#fff}
+
+.flag{width:18px;height:18px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px var(--card),0 0 0 2.5px var(--line-2);display:inline-block}
+.flag.hu{background:linear-gradient(#ce2939 0 33.4%,#fff 33.4% 66.6%,#477050 66.6%)}
+.flag.de{background:linear-gradient(#111 0 33.4%,#dd0000 33.4% 66.6%,#ffce00 66.6%)}
+
+/* breakdown */
+.breakdown{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease;margin-bottom:0}
+.breakdown.on{grid-template-rows:1fr;margin-bottom:14px}
+.breakdown>div{overflow:hidden;min-height:0}
+.bd-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px 28px}
+.bd-card h4{margin:0 0 8px;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.bd-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
+.bd-row:last-child{border-bottom:0}
+.bd-row span:first-child{color:var(--muted);display:flex;align-items:center;gap:6px;min-width:0}
+.bd-row b{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bd-note{grid-column:1/-1;font-size:12.5px;color:var(--faint);display:flex;gap:6px;align-items:flex-start}
+.pos{color:var(--green)} .neg{color:var(--danger)}
+
+/* toolbar */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 12px;flex-wrap:wrap}
+.tabs{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:4px;gap:4px;flex-wrap:wrap}
+.tab{border:0;background:transparent;height:40px;padding:0 16px;border-radius:11px;display:inline-flex;align-items:center;gap:9px;font-weight:600;color:var(--muted);font-size:14px}
+.tab small{font-weight:500;font-size:12.5px;color:var(--faint)}
+.tab:hover{color:var(--text)}
+.tab.on{background:var(--lime);color:var(--lime-ink)}
+.tab.on small{color:rgba(27,37,0,.65)}
+.tab.on.de{background:var(--violet);color:#fff}
+.tab.on.de small{color:rgba(255,255,255,.75)}
+.tab.on.all{background:var(--hero);color:#fff}
+.tab.on.all small{color:rgba(255,255,255,.7)}
+[data-theme=dark] .tab.on.all{background:var(--line-2)}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.search{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--faint)}
+.search input{border:0;outline:0;background:transparent;flex:1;min-width:0;color:var(--text)}
+.search:focus-within{border-color:var(--line-2);box-shadow:0 0 0 3px var(--lime-soft)}
+.sel{height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);padding:0 32px 0 12px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;max-width:100%}
+.chk-chip{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:14px;color:var(--muted);cursor:pointer;user-select:none}
+.chk-chip input{accent-color:var(--green);width:16px;height:16px;margin:0}
+.chk-chip.on{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+
+/* categories */
+.cat{margin-bottom:22px}
+.cat-head{display:flex;align-items:center;gap:10px;padding:0 4px 8px}
+.cat-ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);color:var(--muted)}
+.cat-head h3{margin:0;font-size:16px;font-weight:650;letter-spacing:-.01em}
+.cat-head .cnt{font-size:12.5px;color:var(--faint)}
+.cat-head .sp{flex:1}
+.cat-head .sum{font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cat-tools{display:flex;gap:2px;opacity:.55;transition:opacity .15s}
+.cat:hover .cat-tools,.cat-tools:focus-within{opacity:1}
+.cat-items{display:flex;flex-direction:column;gap:8px}
+.empty-add{border:1.5px dashed var(--line-2);background:transparent;border-radius:14px;padding:13px 16px;text-align:left;color:var(--faint);font-size:14px;display:flex;align-items:center;gap:8px}
+.empty-add:hover{color:var(--text);border-color:var(--faint)}
+
+.asset{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);transition:border-color .15s,box-shadow .2s}
+.asset:hover{border-color:var(--line-2)}
+.asset.open{border-color:var(--line-2);box-shadow:0 10px 30px -18px rgba(16,24,40,.35)}
+.asset.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,30%{box-shadow:0 0 0 4px var(--lime)}100%{box-shadow:var(--shadow)}}
+.asset-row{width:100%;display:flex;align-items:center;gap:14px;padding:13px 16px;border:0;background:transparent;text-align:left;border-radius:16px}
+.a-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--lime-soft);color:var(--green)}
+.a-ico.v{background:var(--violet-soft);color:var(--violet-ink)}
+.a-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.a-name{font-weight:600;font-size:15.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.a-sub{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-val{text-align:right;display:flex;flex-direction:column;gap:1px;white-space:nowrap}
+.a-val b{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.a-val small{font-size:12.5px;color:var(--faint)}
+.a-val.off b{color:var(--faint);text-decoration:line-through}
+.a-more{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--muted);padding:6px 10px;border-radius:9px;background:var(--card-2);border:1px solid var(--line);flex:none}
+.a-more .i{transition:transform .25s}
+.asset.open .a-more .i{transform:rotate(180deg)}
+.badge{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--card-2);color:var(--muted);border:1px solid var(--line)}
+.badge.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.badge.v{background:var(--violet-soft);color:var(--violet-ink);border-color:transparent}
+
+.asset-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease}
+.asset.open .asset-body{grid-template-rows:1fr}
+.asset-body>.inner{overflow:hidden;min-height:0}
+.asset-body .pad{padding:4px 16px 16px;border-top:1px solid var(--line);margin:0 0 0}
+.d-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 28px;margin-top:12px}
+.d-sec h4{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:10px 0 4px;font-weight:650}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:0}
+.kv dt{color:var(--muted);flex:none;max-width:48%}
+.kv dd{margin:0;text-align:right;font-weight:500;overflow-wrap:anywhere}
+.kv.strong dd{font-weight:700}
+dl{margin:0}
+.doc-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.doc-row:last-child{border-bottom:0}
+.doc-ico{width:32px;height:32px;border-radius:9px;background:var(--danger-soft);color:var(--danger);display:grid;place-items:center;flex:none}
+.doc-row .grow{flex:1;min-width:0}
+.doc-row small{display:block;color:var(--faint);font-size:12.5px;overflow-wrap:anywhere}
+.doc-row a{display:inline-flex;align-items:center;gap:4px;font-weight:550}
+.d-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.d-actions .sp{flex:1}
+.note{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:11px;font-size:13.5px;margin-top:12px}
+.note.warn{background:var(--warn-soft);color:var(--warn)}
+.note.info{background:var(--violet-soft);color:var(--violet-ink)}
+.note.ok{background:var(--lime-soft);color:var(--green)}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+
+.welcome{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:30px;text-align:center;margin-bottom:22px}
+.welcome h2{margin:6px 0 6px;font-size:21px;letter-spacing:-.01em}
+.welcome p{color:var(--muted);margin:0 auto 18px;max-width:560px}
+.welcome .btn-row{justify-content:center}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+.liab{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-top:8px}
+.liab-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.liab-head h3{margin:0;font-size:15px}
+.liab-head .sp{flex:1}
+.liab-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.liab-row:first-of-type{margin-top:10px}
+.liab-row .grow{flex:1;min-width:0}
+.liab-row small{display:block;color:var(--faint)}
+.liab-row b{font-variant-numeric:tabular-nums;color:var(--danger);white-space:nowrap}
+
+footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--faint);display:flex;gap:10px 22px;flex-wrap:wrap;justify-content:space-between}
+footer p{margin:0;display:flex;gap:6px;align-items:flex-start;max-width:720px}
+
+/* drawer */
+.drawer-wrap{position:fixed;inset:0;z-index:50;pointer-events:none}
+.drawer-wrap .scrim{position:absolute;inset:0;background:rgba(14,15,20,.35);opacity:0;transition:opacity .2s}
+.drawer-wrap.on{pointer-events:auto}
+.drawer-wrap.on .scrim{opacity:1}
+.drawer{position:absolute;top:0;right:0;bottom:0;width:min(580px,100vw);background:var(--bg);box-shadow:var(--shadow-lg);transform:translateX(102%);transition:transform .26s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.drawer-wrap.on .drawer{transform:none}
+.dr-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 22px 12px}
+.eyebrow{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.dr-head h2{margin:2px 0 0;font-size:21px;letter-spacing:-.01em;overflow-wrap:anywhere}
+.dr-body{flex:1;overflow:auto;padding:4px 22px 24px}
+.dr-foot{display:flex;align-items:center;gap:10px;padding:14px 22px;border-top:1px solid var(--line);background:var(--card)}
+.dr-foot .sp{flex:1;font-size:12.5px;color:var(--faint)}
+.lead{font-size:13.5px;color:var(--muted);margin:0 0 14px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld>span{font-size:13px;color:var(--muted);font-weight:550}
+.fld small{font-size:12px;color:var(--faint)}
+.fld input,.fld select,.fld textarea,.inp{height:42px;border-radius:11px;border:1px solid var(--line-2);background:var(--card);padding:0 12px;outline:0;width:100%;min-width:0}
+.fld textarea{height:auto;min-height:74px;padding:10px 12px;resize:vertical}
+.fld select{appearance:none;-webkit-appearance:none;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.fld input:focus,.fld select:focus,.fld textarea:focus,.inp:focus{border-color:var(--lime-2);box-shadow:0 0 0 3px var(--lime-soft)}
+.fld input[readonly]{background:var(--card-2);color:var(--muted)}
+.inp-wrap{position:relative;display:flex}
+.inp-wrap input{padding-right:46px;text-align:right;font-variant-numeric:tabular-nums}
+.inp-wrap em{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;font-size:13px;color:var(--faint);pointer-events:none}
+.inp-wrap input.big{height:50px;font-size:20px;font-weight:650}
+.fld-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.fld-row.c3{grid-template-columns:repeat(3,1fr)}
+.fld-row.c4{grid-template-columns:repeat(4,1fr)}
+.fld-row .wide,.fld.wide{grid-column:1/-1}
+.fld+.fld-row,.fld-row+.fld{margin-top:12px}
+.seg{display:inline-flex;background:var(--card-2);border:1px solid var(--line-2);border-radius:12px;padding:3px;gap:3px;height:42px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:0 12px;font-weight:600;font-size:13.5px;color:var(--muted);display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+[data-theme=dark] .seg button.on{background:var(--line-2)}
+.seg.full{display:flex}.seg.full button{flex:1;justify-content:center}
+.preview{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--lime-soft);color:var(--green);font-size:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.preview b{font-variant-numeric:tabular-nums}
+.preview.off{background:var(--card-2);color:var(--muted)}
+details.more{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:16px}
+details.more>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:15px 16px;font-weight:600}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary small{color:var(--faint);font-weight:500}
+details.more>summary .chev{margin-left:auto;transition:transform .2s}
+details.more[open]>summary .chev{transform:rotate(180deg)}
+.more-body{padding:0 16px 16px}
+fieldset{border:0;border-top:1px solid var(--line);margin:0;padding:14px 0 6px}
+fieldset:first-child{border-top:0;padding-top:2px}
+legend{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;color:var(--faint);padding:0;float:left;width:100%;margin-bottom:2px}
+legend+*{clear:both}
+.chk{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;margin-top:12px}
+.chk input{width:18px;height:18px;accent-color:var(--green);margin:0}
+.sub-card{border:1px solid var(--line);border-radius:13px;padding:12px;margin-top:12px;background:var(--card-2)}
+.sub-card .fld-row:first-child{margin-top:0}
+.sub-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
+.attach{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;flex-wrap:wrap}
+.attach label.btn{cursor:pointer}
+.hint{font-size:12.5px;color:var(--faint);margin-top:8px}
+
+/* modal */
+.modal-layer{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px}
+.modal-layer .scrim{position:absolute;inset:0;background:rgba(14,15,20,.4);opacity:0;transition:opacity .18s}
+.modal{position:relative;background:var(--card);border-radius:20px;box-shadow:var(--shadow-lg);width:min(480px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;transform:translateY(10px) scale(.98);opacity:0;transition:transform .18s,opacity .18s}
+.modal.wide{width:min(620px,100%)}
+.modal-layer.on .scrim{opacity:1}
+.modal-layer.on .modal{transform:none;opacity:1}
+.m-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 6px}
+.m-head h3{margin:0;font-size:18px}
+.m-body{padding:6px 20px 16px;overflow:auto}
+.m-body p{margin:6px 0}
+.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--line)}
+.set-sec{padding:14px 0;border-top:1px solid var(--line)}
+.set-sec:first-child{border-top:0;padding-top:4px}
+.set-sec h4{margin:0 0 8px;font-size:14px}
+.set-sec .btn-row{margin-top:10px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0}
+.switch input{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:99px;background:var(--line-2);position:relative;cursor:pointer;transition:background .2s;flex:none;margin:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch input:checked{background:var(--lime-2)}
+.switch input:checked::after{transform:translateX(18px)}
+
+/* calculator */
+.calc{position:fixed;right:20px;bottom:20px;z-index:70;width:330px;max-width:calc(100vw - 24px);background:var(--card);border:1px solid var(--line-2);border-radius:20px;box-shadow:var(--shadow-lg);padding:12px;transition:right .26s}
+body.drawer-open .calc{right:calc(min(580px,100vw) + 16px)}
+@media (max-width:960px){body.drawer-open .calc{right:12px;bottom:84px}}
+.calc-head{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 8px}
+.calc-head b{display:flex;align-items:center;gap:8px;font-size:14px}
+.calc .seg{height:36px;width:100%;display:flex}
+.calc .seg button{flex:1;justify-content:center;padding:0 4px;font-size:12.5px}
+.c-disp{margin-top:10px;background:var(--card-2);border:1px solid var(--line);border-radius:13px;padding:8px 12px;text-align:right}
+.c-disp small{display:block;min-height:17px;color:var(--faint);font-size:12.5px}
+.c-disp div{font-size:26px;font-weight:650;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.2}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.keys button{height:44px;border-radius:11px;border:1px solid var(--line);background:var(--card);font-size:17px;font-weight:550}
+.keys button:hover{border-color:var(--line-2);background:var(--card-2)}
+.keys .op{color:var(--violet-ink);background:var(--violet-soft);border-color:transparent}
+.keys .eq{background:var(--lime);color:var(--lime-ink);border-color:var(--lime)}
+.keys .w2{grid-column:span 2}
+.c-body .fld{margin-top:10px}
+.c-res{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--lime-soft);color:var(--green)}
+.c-res div{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.c-res small{font-size:12.5px}
+.calc-foot{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.calc-target{font-size:12px;color:var(--faint);flex-basis:100%}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--hero);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:100;box-shadow:var(--shadow-lg)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast .i{color:var(--lime)}
+.toast.err .i{color:#ff8a8a}
+
+@media (max-width:980px){.stats{grid-template-columns:1fr 1fr}.stats .hero{grid-column:1/-1}}
+@media (max-width:640px){
+  .app{padding:16px 16px 40px}
+  .stats{grid-template-columns:1fr}
+  .hero .big{font-size:29px}
+  .top-actions .btn .lbl-long{display:none}
+  .a-more span{display:none}
+  .asset-row{gap:10px;padding:12px}
+  .a-ico{width:36px;height:36px}
+  .fld-row,.fld-row.c3,.fld-row.c4{grid-template-columns:1fr}
+  .tab small{display:none}
+}
+@media print{.top-actions,.toolbar .btn,.filters,.cat-tools,.d-actions,.calc,footer .btn{display:none!important}.asset-body{grid-template-rows:1fr!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></symbol>
+  <symbol id="i-coins" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01" stroke-width="2.6"/></symbol>
+  <symbol id="i-xls" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9.5 12 5 5M14.5 12l-5 5"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-14"/><path d="M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11m-5-5 5 5 5-5"/><path d="M4 20h16"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V5m-5 5 5-5 5 5"/><path d="M4 20h16"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4L15.5 7"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="2.6"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 1-2z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.7 3.6M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/></symbol>
+  <symbol id="i-loan"viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></symbol>
+</svg>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="logo"><span>L</span></div>
+      <div><h1>Lili vagyonnyilvántartója</h1><p>Magyarországi és németországi vagyon egy helyen</p></div>
+    </div>
+    <div class="top-actions">
+      <span class="save-state" id="saveState" title="Az adatok automatikusan mentődnek ebben a böngészőben"><span class="dot"></span><span>Mentve</span></span>
+      <button class="rate-chip" id="rateChip" title="Árfolyam és értékelési dátum módosítása"></button>
+      <button class="btn ghost" id="valBtn"></button>
+      <button class="btn ghost" id="calcBtn" title="Kalkulátor megnyitása"><svg class="i"><use href="#i-calc"/></svg><span class="lbl-long">Kalkulátor</span></button>
+      <button class="btn" id="backupBtn" title="Teljes biztonsági mentés letöltése erre az eszközre (.json)"><svg class="i"><use href="#i-save"/></svg><span class="lbl-long">Mentés eszközre</span></button>
+      <button class="btn dark" id="exportBtn" title="Teljes nyilvántartás letöltése Excel-fájlként (.xlsx)"><svg class="i"><use href="#i-xls"/></svg><span class="lbl-long">Exportálás Excelbe</span></button>
+      <button class="icon-btn" id="settingsBtn" title="Beállítások, mentés és visszaállítás"><svg class="i"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <div id="banner"></div>
+  <section class="stats" id="stats"></section>
+  <div class="breakdown" id="breakdown"><div></div></div>
+
+  <section class="toolbar">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <button class="btn primary" id="addBtn"><svg class="i"><use href="#i-plus"/></svg>Új vagyontárgy</button>
+  </section>
+  <section class="filters">
+    <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Keresés névre, címre, bankra…" autocomplete="off"></label>
+    <select class="sel" id="fCat" title="Szűrés kategória szerint"></select>
+    <select class="sel" id="fSort" title="Rendezés">
+      <option value="default">Rendezés: felvitel sorrendje</option>
+      <option value="valDesc">Érték szerint – csökkenő</option>
+      <option value="valAsc">Érték szerint – növekvő</option>
+      <option value="dateDesc">Megszerzés dátuma – legújabb elöl</option>
+      <option value="dateAsc">Megszerzés dátuma – legrégebbi elöl</option>
+      <option value="name">Név szerint (A–Z)</option>
+    </select>
+    <label class="chk-chip" id="fMissingWrap"><input type="checkbox" id="fMissing">Csak hiányos adatlapok</label>
+  </section>
+
+  <main id="list"></main>
+  <div><button class="link-btn" id="addCatBtn"><svg class="i sm"><use href="#i-plus"/></svg>Új kategória létrehozása</button></div>
+  <section id="liab"></section>
+
+  <footer>
+    <p><svg class="i sm"><use href="#i-shield"/></svg><span>Az adatok kizárólag ezen az eszközön, ebben a böngészőben tárolódnak – semmilyen szerverre nem kerülnek. Ha törlöd a böngésző adatait, elveszhetnek, ezért időnként mentsd el őket a <b>Mentés eszközre</b> gombbal.</span></p>
+    <p><span id="footInfo"></span></p>
+  </footer>
+</div>
+
+<div class="drawer-wrap" id="drawerWrap"><div class="scrim" data-act="close"></div><aside class="drawer" id="drawer" role="dialog" aria-modal="true"></aside></div>
+<div id="modalWrap"></div>
+<div class="calc" id="calc" hidden></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="restoreInput" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+/* ============================================================
+   Alapok, segédfüggvények
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const icon = (n, c = '') => `<svg class="i ${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const flag = c => `<span class="flag ${c === 'DE' ? 'de' : 'hu'}"></span>`;
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const clone = o => JSON.parse(JSON.stringify(o));
+const isNum = v => typeof v === 'number' && isFinite(v);
+const round2 = v => Math.round(v * 100) / 100;
+
+function grp(n, dec = 0, minus = '-') {
+  if (!isNum(n)) return '';
+  const neg = n < 0; let [i, f] = Math.abs(n).toFixed(dec).split('.');
+  i = i.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return (neg ? minus : '') + i + (f ? ',' + f : '');
+}
+function decimalsOf(v) { const s = String(v); if (s.includes('e')) return 2; return s.includes('.') ? Math.min(4, s.split('.')[1].length) : 0; }
+function fmtIn(v) { return isNum(v) ? grp(v, decimalsOf(v)) : ''; }
+function parseNum(s) {
+  if (isNum(s)) return s;
+  if (s == null) return null;
+  let t = String(s).replace(/[\s  ]/g, '').replace(/−/g, '-').replace(/Ft|HUF|EUR|€|%/gi, '');
+  if (!t) return null;
+  if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+  else if ((t.match(/\./g) || []).length > 1) t = t.replace(/\./g, '');
+  const n = Number(t);
+  return isFinite(n) ? n : null;
+}
+function money(v, cur = 'HUF') {
+  if (!isNum(v)) return '—';
+  return cur === 'EUR' ? grp(v, 2, '−') + ' EUR' : grp(Math.round(v), 0, '−') + ' Ft';
+}
+const HU_M = ['jan.','febr.','márc.','ápr.','máj.','jún.','júl.','aug.','szept.','okt.','nov.','dec.'];
+function fmtDate(iso) { if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return iso || ''; const [y, m, d] = iso.slice(0,10).split('-'); return `${y}. ${HU_M[+m-1]} ${+d}.`; }
+function fmtSize(b) { if (!isNum(b)) return ''; if (b < 1024) return b + ' B'; if (b < 1048576) return grp(b/1024, 0) + ' KB'; return grp(b/1048576, 1) + ' MB'; }
+function safeUrl(u) {
+  if (!u) return null; let s = String(u).trim();
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) { if (/^[\w-]+(\.[\w-]+)+/.test(s)) s = 'https://' + s; else return null; }
+  try { const x = new URL(s); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : null; } catch { return null; }
+}
+const extLink = (url, label) => { const u = safeUrl(url); return u ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer">${esc(label || 'Megnyitás')} ${icon('ext','sm')}</a>` : `<span class="faint" title="Csak http(s) link nyitható meg">${esc(url)}</span>`; };
+
+/* ============================================================
+   Konstansok
+   ============================================================ */
+const COUNTRIES = { HU: { name: 'Magyarország', adj: 'Magyarországi', cur: 'HUF' }, DE: { name: 'Németország', adj: 'Németországi', cur: 'EUR' } };
+const KINDS = {
+  realestate: { label: 'Ingatlan', icon: 'home', valLabel: 'Aktuális teljes ingatlanérték', ph: 'pl. Szentendre – Tómellék utca' },
+  cash:       { label: 'Pénzeszköz (bankszámla, betét)', icon: 'coins', valLabel: 'Aktuális egyenleg', ph: 'pl. OTP – napi folyószámla' },
+  securities: { label: 'Értékpapír', icon: 'chart', valLabel: 'Portfólió aktuális összértéke', ph: 'pl. Német portfólió' },
+  other:      { label: 'Egyéb vagyonelem', icon: 'box', valLabel: 'Aktuális érték', ph: 'pl. Személyautó' },
+};
+const OPTS = {
+  propertyType: [['lakas','Lakás'],['csaladi','Családi ház'],['telek','Telek'],['uzlet','Üzlethelyiség'],['egyeb','Egyéb']],
+  ownershipType: [['teljes','Teljes tulajdon'],['resz','Résztulajdon'],['haszonelvezet','Haszonélvezeti jog'],['csupasz','Csupasz tulajdon (haszonélvezettel terhelt)'],['egyeb','Egyéb jog']],
+  usufructExists: [['nem','Nem áll fenn'],['igen','Fennáll'],['nemtudom','Nem tudom']],
+  acqTitle: [['vasarlas','Vásárlás'],['orokles','Öröklés'],['ajandek','Ajándékozás'],['egyeb','Egyéb']],
+  valuationMethod: [['becsles','Saját becslés'],['ertekbecsles','Értékbecslés'],['vetelar','Vételár'],['kivonat','Számlakivonat / bank'],['egyeb','Egyéb']],
+  accountType: [['folyoszamla','Folyószámla'],['megtakaritasi','Megtakarítási számla'],['lekotott','Lekötött betét'],['deviza','Devizaszámla'],['egyeb','Egyéb']],
+  liquidity: [['azonnal','Azonnal hozzáférhető'],['lekotott','Lekötött'],['korlatozott','Korlátozottan hozzáférhető']],
+  secType: [['reszveny','Részvény'],['etf','ETF'],['kotveny','Kötvény'],['alap','Befektetési alap'],['vegyes','Vegyes portfólió'],['egyeb','Egyéb']],
+  docType: [['tulajdoni_lap','Tulajdoni lap'],['adasveteli','Adásvételi szerződés'],['ertekbecsles','Értékbecslés'],['kivonat','Számlakivonat'],['egyeb','Egyéb dokumentum']],
+};
+const optLabel = (k, v) => (OPTS[k].find(o => o[0] === v) || [])[1] || '';
+const ASSET_DEFAULTS = {
+  name: '', value: null, currency: 'HUF', country: 'HU', categoryId: '', kind: 'other',
+  include: true, manualCounted: null, ownershipPct: 100, valuationDate: '', valuationMethod: '', notes: '', documents: [],
+  settlement: '', address: '', parcel: '', mapsUrl: '', propertyType: '', ownerName: '', ownershipType: '', usufructExists: '', usufructHolder: '',
+  acqDate: '', acqTitle: '', acqTotalValue: null, acqShareValue: null, adjustment: null,
+  bankName: '', accountType: '', liquidity: 'azonnal', maturityDate: '',
+  provider: '', secMode: 'total', secType: '', isin: '', costBasis: null, holdings: [],
+  otherType: '', acqValue: null, createdAt: '', updatedAt: ''
+};
+function defaultCategories() {
+  return [
+    { id: 'hu-ing', country: 'HU', name: 'Ingatlanok', type: 'realestate' },
+    { id: 'hu-bank', country: 'HU', name: 'Bankszámlák és likvid pénzeszközök', type: 'cash', liquidity: 'azonnal' },
+    { id: 'hu-lek', country: 'HU', name: 'Lekötött betétek', type: 'cash', liquidity: 'lekotott' },
+    { id: 'hu-ert', country: 'HU', name: 'Értékpapírok', type: 'securities' },
+    { id: 'hu-egy', country: 'HU', name: 'Egyéb vagyonelemek', type: 'other' },
+    { id: 'de-ing', country: 'DE', name: 'Ingatlanok', type: 'realestate' },
+    { id: 'de-ert', country: 'DE', name: 'Értékpapírok', type: 'securities' },
+    { id: 'de-bank', country: 'DE', name: 'Bankszámlák', type: 'cash', liquidity: 'azonnal' },
+    { id: 'de-egy', country: 'DE', name: 'Egyéb vagyonelemek', type: 'other' },
+  ];
+}
+function emptyState() {
+  return { version: 1, settings: { eurHuf: 405, valuationDate: todayISO(), theme: 'light', showCalc: true, showValues: true, lastBackup: null }, categories: defaultCategories(), assets: [], liabilities: [] };
+}
+
+/* ============================================================
+   Tárolás – IndexedDB (fallback: localStorage) + mentési fájl
+   ============================================================ */
+const store = {
+  db: null, ok: false,
+  async init() {
+    if (!('indexedDB' in window)) return;
+    try {
+      this.db = await new Promise((res, rej) => {
+        const r = indexedDB.open('lili-vagyon', 1);
+        r.onupgradeneeded = () => { const d = r.result; if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv'); if (!d.objectStoreNames.contains('files')) d.createObjectStore('files'); };
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      });
+      this.ok = true;
+    } catch (e) { console.warn('IndexedDB nem elérhető', e); }
+  },
+  tx(name, mode, fn) {
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(name, mode); const r = fn(t.objectStore(name));
+      t.oncomplete = () => res(r ? r.result : undefined); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  },
+  async get(k) { if (this.ok) return this.tx('kv', 'readonly', s => s.get(k)); try { return JSON.parse(localStorage.getItem('lili-vagyon:' + k)); } catch { return null; } },
+  async set(k, v) { if (this.ok) return this.tx('kv', 'readwrite', s => s.put(v, k)); localStorage.setItem('lili-vagyon:' + k, JSON.stringify(v)); },
+  async del(k) { if (this.ok) return this.tx('kv', 'readwrite', s => s.delete(k)); localStorage.removeItem('lili-vagyon:' + k); },
+  putFile(id, rec) { return this.tx('files', 'readwrite', s => s.put(rec, id)); },
+  getFile(id) { return this.tx('files', 'readonly', s => s.get(id)); },
+  delFile(id) { return this.tx('files', 'readwrite', s => s.delete(id)); },
+  fileKeys() { return this.ok ? this.tx('files', 'readonly', s => s.getAllKeys()) : Promise.resolve([]); },
+  clearFiles() { return this.ok ? this.tx('files', 'readwrite', s => s.clear()) : Promise.resolve(); },
+};
+
+let state = emptyState();
+const ui = { country: 'HU', q: '', cat: '', sort: 'default', onlyMissing: false, open: new Set(), breakdown: false, detailsOpen: false };
+let draft = null, dirty = false, lastNum = null;
+const linked = { handle: null, state: 'none', name: '' }; // automatikus mentési fájl: none | ok | needs-permission
+
+async function persist() {
+  setSaveState('saving');
+  try {
+    await store.set('state', clone(state));
+    setSaveState('ok');
+    scheduleFileWrite();
+  } catch (e) { setSaveState('err'); toast('Mentési hiba: ' + e.message, true); }
+}
+function setSaveState(s) {
+  const el = $('#saveState'); el.classList.toggle('warn', s === 'err');
+  const extra = linked.state === 'ok' ? ' + fájl' : '';
+  el.lastElementChild.textContent = s === 'saving' ? 'Mentés…' : s === 'err' ? 'Mentési hiba' : 'Mentve' + extra;
+  el.title = linked.state === 'ok' ? `Az adatok automatikusan mentődnek a böngészőbe és ide: ${linked.name}` : 'Az adatok automatikusan mentődnek ebben a böngészőben';
+}
+function commit(msg) { persist(); render(); if (msg) toast(msg); }
+
+/* --- Automatikus mentés egy választott fájlba (File System Access API, Chrome/Edge) --- */
+const fsSupported = typeof window.showSaveFilePicker === 'function';
+let fileWriteT = null;
+function scheduleFileWrite() {
+  if (linked.state !== 'ok') return;
+  clearTimeout(fileWriteT);
+  fileWriteT = setTimeout(writeLinkedFile, 900);
+}
+async function writeLinkedFile() {
+  if (linked.state !== 'ok' || !linked.handle) return;
+  try {
+    const data = await buildBackup();
+    const w = await linked.handle.createWritable();
+    await w.write(JSON.stringify(data)); await w.close();
+    state.settings.lastBackup = new Date().toISOString();
+    await store.set('state', clone(state));
+    renderFoot();
+  } catch (e) {
+    console.warn(e); linked.state = 'needs-permission'; renderBanner(); setSaveState('ok');
+  }
+}
+async function chooseLinkedFile() {
+  try {
+    const h = await window.showSaveFilePicker({ suggestedName: 'vagyonnyilvantartas.json', types: [{ description: 'Vagyonnyilvántartás mentés', accept: { 'application/json': ['.json'] } }] });
+    linked.handle = h; linked.name = h.name; linked.state = 'ok';
+    try { await store.set('fileHandle', h); } catch (e) { console.warn('A fájlkapcsolat nem tárolható', e); }
+    await writeLinkedFile(); setSaveState('ok'); renderBanner(); renderFoot();
+    toast('Automatikus mentés bekapcsolva: ' + h.name);
+    return true;
+  } catch (e) { if (e.name !== 'AbortError') toast('Nem sikerült a fájl kiválasztása: ' + e.message, true); return false; }
+}
+async function reconnectLinkedFile() {
+  if (!linked.handle) return;
+  try {
+    const p = await linked.handle.requestPermission({ mode: 'readwrite' });
+    if (p === 'granted') { linked.state = 'ok'; await writeLinkedFile(); setSaveState('ok'); renderBanner(); toast('Automatikus fájlmentés újra aktív'); }
+  } catch (e) { toast('Nem sikerült: ' + e.message, true); }
+}
+async function unlinkFile() { linked.handle = null; linked.state = 'none'; linked.name = ''; await store.del('fileHandle'); setSaveState('ok'); renderBanner(); renderFoot(); }
+
+/* ============================================================
+   Normalizálás és ellenőrzés
+   ============================================================ */
+function normalizeState(raw) {
+  const s = emptyState();
+  if (raw.settings) {
+    const r = parseNum(raw.settings.eurHuf); if (r && r > 0) s.settings.eurHuf = r;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw.settings.valuationDate || '')) s.settings.valuationDate = raw.settings.valuationDate;
+    if (raw.settings.theme === 'dark') s.settings.theme = 'dark';
+    if (raw.settings.showCalc === false) s.settings.showCalc = false;
+    if (raw.settings.showValues === false) s.settings.showValues = false;
+    s.settings.lastBackup = raw.settings.lastBackup || null;
+  }
+  if (Array.isArray(raw.categories) && raw.categories.length) {
+    s.categories = raw.categories.filter(c => c && c.id && c.name).map(c => ({ id: String(c.id), country: c.country === 'DE' ? 'DE' : 'HU', name: String(c.name), type: KINDS[c.type] ? c.type : 'other', ...(c.liquidity ? { liquidity: c.liquidity } : {}) }));
+  }
+  s.assets = (Array.isArray(raw.assets) ? raw.assets : []).filter(a => a && typeof a === 'object').map(a => {
+    const x = { ...clone(ASSET_DEFAULTS), ...a };
+    x.id = String(a.id || uid());
+    x.country = x.country === 'DE' ? 'DE' : 'HU';
+    x.currency = x.currency === 'EUR' ? 'EUR' : 'HUF';
+    ['value','manualCounted','ownershipPct','acqTotalValue','acqShareValue','adjustment','costBasis','acqValue'].forEach(k => { x[k] = x[k] === '' || x[k] == null ? null : parseNum(x[k]); });
+    if (x.ownershipPct == null) x.ownershipPct = 100;
+    x.include = x.include !== false;
+    x.documents = Array.isArray(x.documents) ? x.documents.map(d => ({ id: d.id || uid(), type: d.type || 'egyeb', name: d.name || '', url: d.url || '', note: d.note || '', fileId: d.fileId || null, fileName: d.fileName || '', fileSize: d.fileSize || null, fileType: d.fileType || '' })) : [];
+    x.holdings = Array.isArray(x.holdings) ? x.holdings.map(h => ({ id: h.id || uid(), name: h.name || '', type: h.type || '', isin: h.isin || '', qty: parseNum(h.qty), unitPrice: parseNum(h.unitPrice), totalOverride: parseNum(h.totalOverride), acqDate: h.acqDate || '', costBasis: parseNum(h.costBasis) })) : [];
+    let cat = s.categories.find(c => c.id === x.categoryId);
+    if (!cat) {
+      cat = s.categories.find(c => c.country === x.country && c.type === x.kind) ;
+      if (!cat) { cat = { id: uid(), country: x.country, name: 'Visszaállított tételek', type: KINDS[x.kind] ? x.kind : 'other' }; s.categories.push(cat); }
+      x.categoryId = cat.id;
+    }
+    x.kind = cat.type;
+    return x;
+  });
+  s.liabilities = (Array.isArray(raw.liabilities) ? raw.liabilities : []).filter(l => l && typeof l === 'object').map(l => ({
+    id: String(l.id || uid()), name: l.name || 'Kötelezettség', lender: l.lender || '', country: l.country === 'DE' ? 'DE' : 'HU', assetId: l.assetId || '',
+    amount: parseNum(l.amount), currency: l.currency === 'EUR' ? 'EUR' : 'HUF', date: l.date || '', note: l.note || '', include: l.include !== false
+  }));
+  return s;
+}
+function validateBackup(obj) {
+  const errors = [];
+  if (!obj || typeof obj !== 'object') return { ok: false, errors: ['A fájl nem érvényes mentés.'] };
+  const data = obj.data || obj;
+  if (!Array.isArray(data.assets)) errors.push('Hiányzik a vagyontárgyak listája.');
+  if (data.categories && !Array.isArray(data.categories)) errors.push('Hibás a kategóriák listája.');
+  if (data.assets && data.assets.some(a => !a || typeof a !== 'object')) errors.push('Hibás vagyontárgy-adat található benne.');
+  return { ok: errors.length === 0, errors, data, files: Array.isArray(obj.files) ? obj.files : [] };
+}
+
+/* ============================================================
+   Számítások
+   ============================================================ */
+const V = () => state.settings.showValues !== false; // értékek, összegek megjelenítése (kikapcsolva: csak nyilvántartás)
+const rate = () => parseNum(state.settings.eurHuf) || 0;
+const toHUF = (v, cur) => !isNum(v) ? null : (cur === 'EUR' ? v * rate() : v);
+const catById = id => state.categories.find(c => c.id === id);
+const pctOf = a => isNum(a.ownershipPct) ? a.ownershipPct : 100;
+const holdingValue = h => isNum(h.totalOverride) ? h.totalOverride : (isNum(h.qty) && isNum(h.unitPrice) ? h.qty * h.unitPrice : 0);
+const itemsMode = a => a.kind === 'securities' && a.secMode === 'items';
+function grossOrig(a) { // teljes (100%-os) érték az eszköz pénznemében
+  if (itemsMode(a)) return (a.holdings || []).reduce((s, h) => s + holdingValue(h), 0);
+  return isNum(a.value) ? a.value : null;
+}
+function shareOrig(a) { // tulajdoni hányadra jutó érték (+ ingatlannál korrekció)
+  const g = grossOrig(a); if (g == null) return null;
+  return g * pctOf(a) / 100 + (a.kind === 'realestate' && isNum(a.adjustment) ? a.adjustment : 0);
+}
+const usufructOnly = a => a.kind === 'realestate' && a.ownershipType === 'haszonelvezet';
+function countedOrig(a) { // összesítésbe beszámító érték, eredeti pénznemben
+  if (!a.include) return 0;
+  if (isNum(a.manualCounted)) return a.manualCounted;
+  if (usufructOnly(a)) return 0; // haszonélvezeti jog értékét csak kézzel lehet megadni
+  return shareOrig(a) ?? 0;
+}
+const countedHUF = a => toHUF(countedOrig(a), a.currency) || 0;
+function acqShare(a) { // megszerzéskori érték a hányadra vetítve
+  const p = pctOf(a) / 100;
+  if (a.kind === 'realestate') return isNum(a.acqShareValue) ? a.acqShareValue : (isNum(a.acqTotalValue) ? a.acqTotalValue * p : null);
+  if (a.kind === 'securities') {
+    if (itemsMode(a)) { const hs = a.holdings || []; if (!hs.length || hs.some(h => !isNum(h.costBasis))) return null; return hs.reduce((s, h) => s + h.costBasis, 0) * p; }
+    return isNum(a.costBasis) ? a.costBasis * p : null;
+  }
+  if (a.kind === 'other') return isNum(a.acqValue) ? a.acqValue * p : null;
+  return null;
+}
+function acqDiff(a) { if (usufructOnly(a)) return null; const b = acqShare(a), c = shareOrig(a); if (b == null || c == null) return null; return { base: b, cur: c, diff: c - b, pct: b ? (c - b) / b * 100 : null }; }
+const liabFor = a => state.liabilities.filter(l => l.assetId === a.id);
+
+function totals() {
+  const t = { total: 0, HU: 0, DE: 0, liquid: 0, locked: 0, limited: 0, huf: 0, eur: 0, eurHuf: 0, byCat: {}, acqBase: 0, acqCur: 0, acqN: 0, liab: 0, liabHU: 0, liabDE: 0, net: 0, n: 0 };
+  for (const a of state.assets) {
+    const h = countedHUF(a);
+    t.byCat[a.categoryId] = (t.byCat[a.categoryId] || 0) + h;
+    if (!a.include) continue;
+    t.n++; t.total += h; t[a.country] += h;
+    if (a.kind === 'cash') { if (a.liquidity === 'lekotott') t.locked += h; else if (a.liquidity === 'korlatozott') t.limited += h; else t.liquid += h; }
+    if (a.currency === 'EUR') { t.eur += countedOrig(a); t.eurHuf += h; } else t.huf += h;
+    const d = acqDiff(a); if (d) { t.acqBase += toHUF(d.base, a.currency); t.acqCur += toHUF(d.cur, a.currency); t.acqN++; }
+  }
+  for (const l of state.liabilities) { if (!l.include) continue; const h = toHUF(l.amount, l.currency) || 0; t.liab += h; t['liab' + l.country] += h; }
+  t.net = t.total - t.liab;
+  return t;
+}
+function missingFields(a) {
+  const m = [];
+  const v = V();
+  if (!a.name) m.push('Megnevezés');
+  if (v && !itemsMode(a) && !isNum(a.value)) m.push(a.kind === 'cash' ? 'Egyenleg' : 'Érték');
+  if (itemsMode(a) && !(a.holdings || []).length) m.push('Értékpapír-tételek');
+  if (a.kind === 'realestate') {
+    if (!a.settlement && !a.address) m.push('Cím');
+    if (!a.ownershipType) m.push('Tulajdonjog típusa');
+    if (!a.acqDate) m.push('Megszerzés dátuma');
+    if (v && !a.valuationDate) m.push('Értékelés dátuma');
+    if (v && usufructOnly(a) && !isNum(a.manualCounted)) m.push('Haszonélvezeti jog értéke');
+  } else if (a.kind === 'cash') {
+    if (!a.bankName) m.push('Bank neve');
+    if (v && !a.valuationDate) m.push('Egyenleg dátuma');
+    if (a.liquidity === 'lekotott' && !a.maturityDate) m.push('Lejárati dátum');
+  } else if (a.kind === 'securities') {
+    if (!a.provider) m.push('Szolgáltató / bank');
+    if (v && !a.valuationDate) m.push('Értékelés dátuma');
+  } else if (v && !a.valuationDate) m.push('Értékelés dátuma');
+  return m;
+}
+
+/* ============================================================
+   Renderelés – főoldal
+   ============================================================ */
+function render() {
+  document.documentElement.dataset.theme = state.settings.theme;
+  renderHeader(); renderBanner(); renderStats(); renderTabs(); renderFilters(); renderList(); renderLiab(); renderFoot();
+  if (!$('#calc').hidden) renderCalcTarget();
+}
+function renderHeader() {
+  $('#rateChip').innerHTML = `${icon('coins','sm')} 1 EUR = <b>${grp(rate(), decimalsOf(rate()))} Ft</b> · ${esc(fmtDate(state.settings.valuationDate))}`;
+  $('#rateChip').hidden = !V();
+  $('#calcBtn').hidden = !state.settings.showCalc || !V();
+  if (!V()) $('#calc').hidden = true;
+  $('#valBtn').innerHTML = V() ? `${icon('eyeoff')}<span class="lbl-long">Értékek elrejtése</span>` : `${icon('eye')}<span class="lbl-long">Értékek mutatása</span>`;
+  $('#valBtn').title = V() ? 'Csak nyilvántartás: minden összeg, árfolyam és értékadat elrejtése (az adatok megmaradnak)' : 'Összegek, értékek és árfolyam megjelenítése';
+  $$('#fSort option[value^=val]').forEach(o => o.hidden = !V());
+  if (!V() && ui.sort.startsWith('val')) ui.sort = 'default';
+}
+function setValues(on) { state.settings.showValues = on; if (!on) ui.breakdown = false; commit(on ? 'Értékek megjelenítve' : 'Csak nyilvántartás – az értékek elrejtve'); }
+function renderBanner() {
+  const el = $('#banner'); let h = '';
+  if (linked.state === 'needs-permission') {
+    h = `<div class="banner info">${icon('save')}<span class="grow">Az automatikus mentés a(z) <b>${esc(linked.name)}</b> fájlba szünetel – a böngésző engedélyt kér a folytatáshoz.</span><button class="btn sm" data-banner="reconnect">Mentés folytatása</button><button class="btn sm ghost" data-banner="unlink">Kikapcsolás</button></div>`;
+  } else if (state.assets.length && linked.state !== 'ok') {
+    const lb = state.settings.lastBackup ? new Date(state.settings.lastBackup) : null;
+    const days = lb ? (Date.now() - lb) / 864e5 : Infinity;
+    if (days > 14) h = `<div class="banner">${icon('alert')}<span class="grow">${lb ? `Az utolsó mentés az eszközre ${Math.floor(days)} napja készült.` : 'Még nem készült mentés az eszközre.'} Ments egy fájlba, hogy egy böngészőadat-törlés után se kelljen elölről kezdened.</span><button class="btn sm" data-banner="backup">${icon('save','sm')} Mentés eszközre</button></div>`;
+  }
+  el.innerHTML = h;
+}
+function renderStats() {
+  if (!V()) {
+    const n = c => state.assets.filter(a => !c || a.country === c).length;
+    const docs = state.assets.reduce((s, a) => s + (a.documents || []).length, 0);
+    $('#stats').innerHTML = `
+      <div class="stat hero"><span class="lbl">Nyilvántartott vagyonelemek</span><div class="big">${n()} tétel</div>
+        <div class="meta"><span class="pill">Csak nyilvántartás</span><span>Az értékek el vannak rejtve.</span></div>
+        <button class="hero-link" data-show-values>Értékek megjelenítése ${icon('chev','sm')}</button></div>
+      <button class="stat ${ui.country === 'HU' ? 'on' : ''}" data-country="HU"><span class="lbl">${flag('HU')} Magyarország</span><div class="val">${n('HU')} tétel</div><span class="sub">${state.categories.filter(c => c.country === 'HU').length} kategória</span></button>
+      <button class="stat de ${ui.country === 'DE' ? 'on de' : ''}" data-country="DE"><span class="lbl">${flag('DE')} Németország</span><div class="val">${n('DE')} tétel</div><span class="sub">${state.categories.filter(c => c.country === 'DE').length} kategória</span></button>
+      <div class="stat"><span class="lbl"><span class="ico">${icon('doc','sm')}</span>Dokumentumok</span><div class="val">${docs} db</div><span class="sub">Linkek és csatolt fájlok</span></div>`;
+    $('#breakdown').classList.remove('on');
+    return;
+  }
+  const t = totals(); const huP = t.total ? t.HU / t.total * 100 : 0, deP = t.total ? t.DE / t.total * 100 : 0;
+  const hasLiab = state.liabilities.length > 0;
+  $('#stats').innerHTML = `
+    <div class="stat hero">
+      <span class="lbl">Teljes vagyon</span>
+      <div class="big">${money(t.total)}</div>
+      <div class="meta"><span class="pill">≈ ${money(rate() ? t.total / rate() : null, 'EUR')}</span><span>Értékelési dátum: ${esc(fmtDate(state.settings.valuationDate))}</span></div>
+      ${t.total ? `<div class="split" title="Magyarország ${grp(huP,0)}% · Németország ${grp(deP,0)}%"><i class="hu" style="width:${huP}%"></i><i class="de" style="width:${deP}%"></i></div>` : ''}
+      ${hasLiab ? `<div class="net">Kötelezettségekkel csökkentve (nettó): <b>${money(t.net)}</b></div>` : ''}
+      <button class="hero-link" id="toggleBreakdown">${ui.breakdown ? 'Részletes összesítés elrejtése' : 'Részletes összesítés'} ${icon('chev','sm')}</button>
+    </div>
+    <button class="stat ${ui.country === 'HU' ? 'on' : ''}" data-country="HU"><span class="lbl">${flag('HU')} Magyarországi vagyon</span><div class="val">${money(t.HU)}</div><span class="sub">${t.total ? grp(huP, 0) + '% a teljes vagyonból' : 'Még nincs tétel'}</span></button>
+    <button class="stat de ${ui.country === 'DE' ? 'on de' : ''}" data-country="DE"><span class="lbl">${flag('DE')} Németországi vagyon</span><div class="val">${money(t.DE)}</div><span class="sub">${t.total ? grp(deP, 0) + '% a teljes vagyonból' : 'Még nincs tétel'}</span></button>
+    <div class="stat"><span class="lbl"><span class="ico">${icon('coins','sm')}</span>Likvid vagyon</span><div class="val">${money(t.liquid)}</div><span class="sub">Azonnal hozzáférhető pénzeszközök</span></div>`;
+  renderBreakdown(t);
+}
+function renderBreakdown(t) {
+  const wrap = $('#breakdown'); wrap.classList.toggle('on', ui.breakdown);
+  if (!ui.breakdown) return;
+  const catRows = state.categories.filter(c => (t.byCat[c.id] || 0) !== 0).sort((a, b) => (t.byCat[b.id] || 0) - (t.byCat[a.id] || 0))
+    .map(c => `<div class="bd-row"><span>${flag(c.country)} ${esc(c.name)}</span><b>${money(t.byCat[c.id])}</b></div>`).join('') || '<div class="bd-row"><span>Még nincs adat</span><b></b></div>';
+  const diff = t.acqCur - t.acqBase;
+  wrap.firstElementChild.innerHTML = `<div class="bd-card">
+    <div><h4>Kategóriánként</h4>${catRows}</div>
+    <div><h4>Pénzeszközök</h4>
+      <div class="bd-row"><span>Azonnal hozzáférhető</span><b>${money(t.liquid)}</b></div>
+      <div class="bd-row"><span>Lekötött</span><b>${money(t.locked)}</b></div>
+      <div class="bd-row"><span>Korlátozottan hozzáférhető</span><b>${money(t.limited)}</b></div>
+      <h4 style="margin-top:14px">Pénznem szerint</h4>
+      <div class="bd-row"><span>Forintban nyilvántartott</span><b>${money(t.huf)}</b></div>
+      <div class="bd-row"><span>Euróban nyilvántartott</span><b>${money(t.eur, 'EUR')}</b></div>
+      <div class="bd-row"><span>…forintra átszámítva</span><b>${money(t.eurHuf)}</b></div>
+    </div>
+    <div><h4>Bruttó és nettó</h4>
+      <div class="bd-row"><span>Bruttó vagyon</span><b>${money(t.total)}</b></div>
+      <div class="bd-row"><span>Kötelezettségek</span><b class="${t.liab ? 'neg' : ''}">${t.liab ? '−' : ''}${money(t.liab)}</b></div>
+      <div class="bd-row"><span>Nettó vagyon</span><b>${money(t.net)}</b></div>
+      <h4 style="margin-top:14px">Megszerzéskori vs. aktuális</h4>
+      ${t.acqN ? `<div class="bd-row"><span>Megszerzéskori érték (${t.acqN} tétel)</span><b>${money(t.acqBase)}</b></div>
+      <div class="bd-row"><span>Ugyanezek most</span><b>${money(t.acqCur)}</b></div>
+      <div class="bd-row"><span>Különbség</span><b class="${diff >= 0 ? 'pos' : 'neg'}">${diff >= 0 ? '+' : ''}${money(diff)}${t.acqBase ? ` (${diff >= 0 ? '+' : ''}${grp(diff / t.acqBase * 100, 1)}%)` : ''}</b></div>` : '<div class="bd-row"><span>Nincs megadott megszerzéskori érték</span><b></b></div>'}
+    </div>
+    <div class="bd-note">${icon('alert','sm')}<span>Az összegek tájékoztató jellegűek: a tulajdoni hányadra jutó (vagy kézzel megadott) értékeket mutatják 1 EUR = ${grp(rate(), decimalsOf(rate()))} Ft árfolyamon. Nem azonosak automatikusan a jogszabály szerinti adóalappal.</span></div>
+  </div>`;
+}
+function renderTabs() {
+  const t = totals();
+  const cnt = c => state.assets.filter(a => c === 'ALL' || a.country === c).length + ' tétel';
+  const tab = (c, label, val, cls) => `<button class="tab ${ui.country === c ? 'on ' + cls : ''}" role="tab" aria-selected="${ui.country === c}" data-country="${c}">${c !== 'ALL' ? flag(c) : icon('list','sm')}${label}<small>${V() ? money(val) : cnt(c)}</small></button>`;
+  $('#tabs').innerHTML = tab('HU', 'Magyarország', t.HU, 'hu') + tab('DE', 'Németország', t.DE, 'de') + tab('ALL', 'Mindkettő', t.total, 'all');
+}
+function visibleCats() { return state.categories.filter(c => ui.country === 'ALL' || c.country === ui.country); }
+function renderFilters() {
+  const cats = visibleCats();
+  if (ui.cat && !cats.some(c => c.id === ui.cat)) ui.cat = '';
+  $('#fCat').innerHTML = `<option value="">Minden kategória</option>` + cats.map(c => `<option value="${esc(c.id)}" ${ui.cat === c.id ? 'selected' : ''}>${ui.country === 'ALL' ? (c.country === 'HU' ? 'HU · ' : 'DE · ') : ''}${esc(c.name)}</option>`).join('');
+  $('#fSort').value = ui.sort; $('#fMissing').checked = ui.onlyMissing;
+  $('#fMissingWrap').classList.toggle('on', ui.onlyMissing);
+}
+function matches(a) {
+  if (ui.onlyMissing && !missingFields(a).length) return false;
+  if (!ui.q) return true;
+  const q = ui.q.toLowerCase();
+  const hay = [a.name, a.settlement, a.address, a.parcel, a.bankName, a.provider, a.notes, a.ownerName, a.isin, a.otherType, ...(a.holdings || []).flatMap(h => [h.name, h.isin])].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+function sortAssets(list) {
+  const s = ui.sort, by = (f, dir) => (a, b) => { const x = f(a), y = f(b); if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return x < y ? -dir : x > y ? dir : 0; };
+  if (s === 'valDesc') return list.sort(by(countedHUF, -1));
+  if (s === 'valAsc') return list.sort(by(countedHUF, 1));
+  if (s === 'dateDesc') return list.sort(by(a => a.acqDate || null, -1));
+  if (s === 'dateAsc') return list.sort(by(a => a.acqDate || null, 1));
+  if (s === 'name') return list.sort((a, b) => a.name.localeCompare(b.name, 'hu'));
+  return list;
+}
+function renderList() {
+  const filtering = !!(ui.q || ui.onlyMissing || ui.cat);
+  const cats = visibleCats().filter(c => !ui.cat || c.id === ui.cat);
+  let html = '';
+  if (!state.assets.length) {
+    html += `<div class="welcome">${icon('shield','lg')}<h2>Üdv! Kezdjük a nyilvántartást.</h2>
+      <p>Vedd fel az első vagyontárgyat – elég a neve és az értéke, a többi bármikor kiegészíthető. Ha már van mentésed az eszközödön, töltsd vissza, és ott folytathatod, ahol abbahagytad.</p>
+      <div class="btn-row"><button class="btn primary" data-act="add">${icon('plus')} Első vagyontárgy felvitele</button><button class="btn" data-act="restore">${icon('folder')} Korábbi mentés megnyitása</button><button class="btn ghost" data-act="sample">Mintaadatok betöltése</button></div></div>`;
+  }
+  let shown = 0;
+  for (const c of cats) {
+    const items = sortAssets(state.assets.filter(a => a.categoryId === c.id && matches(a)));
+    const total = state.assets.filter(a => a.categoryId === c.id).length;
+    if (filtering && !items.length) continue;
+    shown += items.length;
+    const sum = items.reduce((s, a) => s + countedHUF(a), 0);
+    html += `<section class="cat" data-cat="${esc(c.id)}">
+      <header class="cat-head">
+        <span class="cat-ico">${icon(KINDS[c.type].icon,'sm')}</span>
+        <h3>${ui.country === 'ALL' ? flag(c.country) + ' ' : ''}${esc(c.name)}</h3><span class="cnt">${total} tétel</span>
+        <span class="cat-tools">
+          <button class="icon-btn sm" data-act="addin" data-cat="${esc(c.id)}" title="Új vagyontárgy ebbe a kategóriába">${icon('plus','sm')}</button>
+          <button class="icon-btn sm" data-act="catrename" data-cat="${esc(c.id)}" title="Kategória átnevezése">${icon('edit','sm')}</button>
+          <button class="icon-btn sm" data-act="catdel" data-cat="${esc(c.id)}" ${total ? 'disabled' : ''} title="${total ? 'Csak üres kategória törölhető' : 'Kategória törlése'}">${icon('trash','sm')}</button>
+        </span>
+        <span class="sp"></span><span class="sum">${total && V() ? money(sum) : ''}</span>
+      </header>
+      <div class="cat-items">${items.length ? items.map(assetHTML).join('') : `<button class="empty-add" data-act="addin" data-cat="${esc(c.id)}">${icon('plus','sm')} Vagyontárgy hozzáadása ide</button>`}</div>
+    </section>`;
+  }
+  if (filtering && !shown) html += `<div class="welcome"><h2>Nincs találat</h2><p>Próbálj más keresőszót, vagy töröld a szűrőket.</p><div class="btn-row"><button class="btn" data-act="clearfilters">Szűrők törlése</button></div></div>`;
+  $('#list').innerHTML = html;
+}
+function assetSub(a) {
+  const parts = [];
+  if (ui.country === 'ALL') parts.push(COUNTRIES[a.country].name);
+  if (a.kind === 'realestate') { parts.push(optLabel('propertyType', a.propertyType) || 'Ingatlan'); if (a.settlement) parts.push(a.settlement); if (a.ownershipType) parts.push(optLabel('ownershipType', a.ownershipType)); }
+  else if (a.kind === 'cash') { if (a.bankName) parts.push(a.bankName); parts.push(optLabel('liquidity', a.liquidity) || 'Pénzeszköz'); if (a.maturityDate) parts.push('lejár: ' + fmtDate(a.maturityDate)); }
+  else if (a.kind === 'securities') { if (a.provider) parts.push(a.provider); parts.push(itemsMode(a) ? `${(a.holdings || []).length} értékpapír tételesen` : 'egy összegként'); }
+  else { parts.push(a.otherType || catById(a.categoryId)?.name || 'Egyéb'); }
+  if (pctOf(a) !== 100) parts.push(grp(pctOf(a), decimalsOf(pctOf(a))) + '% tulajdon');
+  return parts.join(' · ');
+}
+function assetHTML(a) {
+  const open = ui.open.has(a.id), miss = missingFields(a), k = KINDS[a.kind] || KINDS.other;
+  const c = countedOrig(a); const g = grossOrig(a);
+  let small = '';
+  if (a.currency === 'EUR') small = money(isNum(a.manualCounted) || pctOf(a) !== 100 || !a.include ? (a.include ? c : g) : g, 'EUR');
+  else if (pctOf(a) !== 100 && isNum(g)) small = 'teljes: ' + money(g);
+  if (isNum(a.manualCounted) && a.include) small = 'kézi érték' + (small ? ' · ' + small : '');
+  return `<article class="asset ${open ? 'open' : ''}" data-id="${esc(a.id)}">
+    <button class="asset-row" data-act="toggle" aria-expanded="${open}">
+      <span class="a-ico ${a.country === 'DE' ? 'v' : ''}">${icon(k.icon)}</span>
+      <span class="a-main">
+        <span class="a-name">${esc(a.name)}${miss.length ? `<span class="badge warn" title="Hiányzik: ${esc(miss.join(', '))}">Hiányos</span>` : ''}${!a.include && V() ? '<span class="badge">Nem számít bele</span>' : ''}${a.currency === 'EUR' && V() ? '<span class="badge v">EUR</span>' : ''}</span>
+        <span class="a-sub">${esc(assetSub(a))}</span>
+      </span>
+      ${V() ? `<span class="a-val ${a.include ? '' : 'off'}"><b>${money(a.include ? countedHUF(a) : toHUF(g, a.currency))}</b>${small ? `<small>${esc(small)}</small>` : ''}</span>` : ''}
+      <span class="a-more"><span>${open ? 'Bezárás' : 'Részletek'}</span>${icon('chev','sm')}</span>
+    </button>
+    <div class="asset-body"><div class="inner"><div class="pad">${open ? detailsHTML(a) : ''}</div></div></div>
+  </article>`;
+}
+const kv = (label, val, cls = '') => (val == null || val === '') ? '' : `<div class="kv ${cls}"><dt>${label}</dt><dd>${val}</dd></div>`;
+const mv = (v, cur) => isNum(v) && V() ? esc(money(v, cur)) : '';
+function detailsHTML(a) {
+  const miss = missingFields(a), cur = a.currency, secs = [];
+  const pct = pctOf(a), pctTxt = grp(pct, decimalsOf(pct)) + '%';
+  if (a.kind === 'realestate') {
+    const mapUrl = a.mapsUrl || ((a.settlement || a.address) ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([a.address, a.settlement].filter(Boolean).join(', ')) : '');
+    secs.push(['Alapadatok', kv('Település', esc(a.settlement)) + kv('Cím', esc(a.address)) + kv(a.country === 'DE' ? 'Flurstück / Grundbuch' : 'Helyrajzi szám', esc(a.parcel)) + kv('Ingatlan típusa', esc(optLabel('propertyType', a.propertyType))) + kv('Térkép', mapUrl ? extLink(mapUrl, 'Megnyitás Google Térképen') : '') + kv('Megjegyzés', esc(a.notes))]);
+    secs.push(['Tulajdonviszonyok', kv('Tulajdonos', esc(a.ownerName)) + kv('Tulajdonjog típusa', esc(optLabel('ownershipType', a.ownershipType))) + kv('Tulajdoni hányad', pctTxt) + kv('Haszonélvezeti jog', esc(optLabel('usufructExists', a.usufructExists))) + kv('Haszonélvező', esc(a.usufructHolder)) + kv('Megszerzés dátuma', esc(fmtDate(a.acqDate))) + kv('Megszerzés jogcíme', esc(optLabel('acqTitle', a.acqTitle))) + kv('Megszerzéskori teljes érték', mv(a.acqTotalValue, cur)) + kv('Megszerzett hányad értéke', mv(a.acqShareValue, cur))]);
+  } else if (a.kind === 'cash') {
+    secs.push(['Számla adatai', kv('Bank', esc(a.bankName)) + kv('Számla megnevezése', esc(a.name)) + kv('Számlatípus', esc(optLabel('accountType', a.accountType))) + kv('Hozzáférhetőség', esc(optLabel('liquidity', a.liquidity))) + kv('Lejárati dátum', esc(fmtDate(a.maturityDate))) + kv('Tulajdoni hányad', pctTxt) + kv('Megjegyzés', esc(a.notes))]);
+  } else if (a.kind === 'securities') {
+    secs.push(['Portfólió', kv('Szolgáltató / bank', esc(a.provider)) + kv('Rögzítés módja', itemsMode(a) ? 'Tételesen' : 'Egy összegként') + (itemsMode(a) ? '' : kv('Típus', esc(optLabel('secType', a.secType))) + kv('ISIN', esc(a.isin))) + kv('Megszerzés dátuma', esc(fmtDate(a.acqDate))) + kv('Bekerülési érték', mv(a.costBasis, cur)) + kv('Tulajdoni hányad', pctTxt) + kv('Megjegyzés', esc(a.notes))]);
+    if (itemsMode(a)) secs.push(['Értékpapírok', (a.holdings || []).map(h => kv(esc(h.name || 'Névtelen tétel') + `<br><small class="faint">${esc([optLabel('secType', h.type), h.isin, isNum(h.qty) ? grp(h.qty, decimalsOf(h.qty)) + ' db' : '', isNum(h.unitPrice) && V() ? '× ' + money(h.unitPrice, cur) : ''].filter(Boolean).join(' · '))}</small>`, V() ? esc(money(holdingValue(h), cur)) : '&nbsp;')).join('') || '<p class="faint">Nincs tétel.</p>']);
+  } else {
+    secs.push(['Adatok', kv('Típus', esc(a.otherType)) + kv('Tulajdoni hányad', pctTxt) + kv('Megszerzés dátuma', esc(fmtDate(a.acqDate))) + kv('Megszerzéskori érték', mv(a.acqValue, cur)) + kv('Megjegyzés', esc(a.notes))]);
+  }
+  const g = grossOrig(a), d = acqDiff(a), ls = liabFor(a);
+  let val = kv(a.kind === 'cash' ? 'Egyenleg' : 'Aktuális teljes érték', mv(g, cur)) + kv(a.kind === 'cash' ? 'Egyenleg dátuma' : 'Értékelés dátuma', esc(fmtDate(a.valuationDate))) + kv('Érték megállapítása', esc(optLabel('valuationMethod', a.valuationMethod)));
+  if (pct !== 100 || (a.kind === 'realestate' && isNum(a.adjustment))) val += kv('Tulajdoni hányadra jutó érték', mv(shareOrig(a), cur));
+  if (a.kind === 'realestate' && isNum(a.adjustment)) val += kv('Értékkorrekció', mv(a.adjustment, cur));
+  if (isNum(a.manualCounted)) val += kv('Kézzel megadott összesítési érték', mv(a.manualCounted, cur));
+  val += kv('Összesítésbe számít', a.include ? esc(money(countedHUF(a))) + (cur === 'EUR' ? `<br><small class="faint">${esc(money(countedOrig(a), 'EUR'))} · 1 EUR = ${grp(rate(), decimalsOf(rate()))} Ft</small>` : '') : 'Nem (kizárva az összesítésből)', 'strong');
+  if (d) val += kv('Változás megszerzés óta', `<span class="${d.diff >= 0 ? 'pos' : 'neg'}">${d.diff >= 0 ? '+' : ''}${esc(money(d.diff, cur))}${d.pct != null ? ` (${d.diff >= 0 ? '+' : ''}${grp(d.pct, 1)}%)` : ''}</span>`);
+  if (ls.length) val += kv('Kapcsolódó kötelezettség', ls.map(l => `<span class="neg">−${esc(money(l.amount, l.currency))}</span> <small class="faint">${esc(l.name)}</small>`).join('<br>'));
+  if (V()) secs.push([a.kind === 'cash' ? 'Egyenleg' : 'Értékadatok', val]);
+  const docs = (a.documents || []).map(doc => `<div class="doc-row"><span class="doc-ico">${icon('doc','sm')}</span><span class="grow"><b>${esc(doc.name || optLabel('docType', doc.type))}</b><small>${esc([optLabel('docType', doc.type), doc.note].filter(Boolean).join(' · '))}</small></span>${doc.url ? extLink(doc.url, 'Link') : ''}${doc.fileId ? ` <button class="btn sm ghost" data-act="openfile" data-file="${esc(doc.fileId)}" title="${esc(doc.fileName)}">${icon('clip','sm')} Fájl</button>` : ''}</div>`).join('');
+  secs.push(['Dokumentumok', docs || '<p class="faint" style="margin:6px 0">Még nincs dokumentum. A Szerkesztésnél adhatsz hozzá linket vagy fájlt.</p>']);
+  return `${miss.length ? `<div class="note warn">${icon('alert','sm')}<span>Hiányzó adatok: <b>${esc(miss.join(', '))}</b>. A tétel így is el van mentve – bármikor kiegészítheted.</span></div>` : ''}
+    ${usufructOnly(a) && V() ? `<div class="note info">${icon('alert','sm')}<span>Haszonélvezeti jognál az összesítésbe csak a kézzel megadott érték számít – az alkalmazás nem számol jogszabályi feltételezésekkel.</span></div>` : ''}
+    <div class="d-grid">${secs.map(([h, b]) => `<section class="d-sec"><h4>${h}</h4><dl>${b}</dl></section>`).join('')}</div>
+    <div class="d-actions"><button class="btn primary sm" data-act="edit">${icon('edit','sm')} Szerkesztés</button><button class="btn sm" data-act="copy">${icon('copy','sm')} Másolás</button><span class="sp"></span><button class="btn sm danger-ghost" data-act="del">${icon('trash','sm')} Törlés</button></div>`;
+}
+function renderLiab() {
+  if (!V()) { $('#liab').innerHTML = ''; return; }
+  const list = state.liabilities.filter(l => ui.country === 'ALL' || l.country === ui.country);
+  const sum = list.filter(l => l.include).reduce((s, l) => s + (toHUF(l.amount, l.currency) || 0), 0);
+  $('#liab').innerHTML = `<div class="liab"><div class="liab-head"><span class="cat-ico">${icon('loan','sm')}</span><h3>Kötelezettségek</h3><span class="faint" style="font-size:13px">opcionális – pl. ingatlanhoz tartozó hitel</span><span class="sp"></span>${list.length ? `<b class="neg" style="font-variant-numeric:tabular-nums">−${money(sum)}</b>` : ''}<button class="btn sm" data-act="liabadd">${icon('plus','sm')} Új kötelezettség</button></div>
+    ${list.map(l => { const a = state.assets.find(x => x.id === l.assetId); return `<div class="liab-row"><span class="grow">${ui.country === 'ALL' ? flag(l.country) + ' ' : ''}<b style="color:var(--text)">${esc(l.name)}</b><small>${esc([l.lender, a ? 'Kapcsolódik: ' + a.name : '', l.date ? 'Állapot: ' + fmtDate(l.date) : '', !l.include ? 'nem számít bele' : ''].filter(Boolean).join(' · '))}</small></span><b>−${esc(money(l.amount, l.currency))}</b><button class="icon-btn sm" data-act="liabedit" data-lid="${esc(l.id)}" title="Szerkesztés">${icon('edit','sm')}</button><button class="icon-btn sm" data-act="liabdel" data-lid="${esc(l.id)}" title="Törlés">${icon('trash','sm')}</button></div>`; }).join('')}</div>`;
+}
+function renderFoot() {
+  const lb = state.settings.lastBackup;
+  $('#footInfo').innerHTML = `${linked.state === 'ok' ? `Automatikus fájlmentés: <b>${esc(linked.name)}</b> · ` : ''}Utolsó mentés eszközre: ${lb ? esc(new Date(lb).toLocaleString('hu-HU')) : 'még nem volt'}`;
+}
+
+/* ============================================================
+   Főoldali események
+   ============================================================ */
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-banner]');
+  if (b) { const v = b.dataset.banner; if (v === 'backup') downloadBackup(); if (v === 'reconnect') reconnectLinkedFile(); if (v === 'unlink') unlinkFile(); }
+});
+$('#stats').addEventListener('click', e => {
+  if (e.target.closest('#toggleBreakdown')) { ui.breakdown = !ui.breakdown; renderStats(); return; }
+  if (e.target.closest('[data-show-values]')) { setValues(true); return; }
+  const s = e.target.closest('[data-country]'); if (s) setCountry(s.dataset.country);
+});
+$('#tabs').addEventListener('click', e => { const t = e.target.closest('[data-country]'); if (t) setCountry(t.dataset.country); });
+function setCountry(c) { ui.country = ui.country === c && c !== 'ALL' ? c : c; try { localStorage.setItem('lili-vagyon:tab', c); } catch {} render(); }
+$('#q').addEventListener('input', e => { ui.q = e.target.value.trim(); renderList(); });
+$('#fCat').addEventListener('change', e => { ui.cat = e.target.value; renderList(); });
+$('#fSort').addEventListener('change', e => { ui.sort = e.target.value; renderList(); });
+$('#fMissing').addEventListener('change', e => { ui.onlyMissing = e.target.checked; renderFilters(); renderList(); });
+$('#addBtn').addEventListener('click', () => openEditor(null));
+$('#addCatBtn').addEventListener('click', () => categoryDialog());
+$('#exportBtn').addEventListener('click', exportExcel);
+$('#backupBtn').addEventListener('click', downloadBackup);
+$('#settingsBtn').addEventListener('click', () => openSettings());
+$('#rateChip').addEventListener('click', () => openSettings(true));
+$('#calcBtn').addEventListener('click', toggleCalc);
+$('#valBtn').addEventListener('click', () => setValues(!V()));
+
+$('#list').addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act, card = el.closest('.asset'), id = card && card.dataset.id, a = id && state.assets.find(x => x.id === id);
+  if (act === 'toggle') {
+    const open = !card.classList.contains('open');
+    if (open) { ui.open.add(id); card.querySelector('.pad').innerHTML = detailsHTML(a); } else ui.open.delete(id);
+    requestAnimationFrame(() => card.classList.toggle('open', open));
+    el.setAttribute('aria-expanded', open); el.querySelector('.a-more span').textContent = open ? 'Bezárás' : 'Részletek';
+  }
+  else if (act === 'edit') openEditor(a);
+  else if (act === 'copy') {
+    const c = clone(a); c.id = uid(); c.name = a.name + ' (másolat)'; c.createdAt = c.updatedAt = new Date().toISOString();
+    c.documents.forEach(d => d.id = uid()); c.holdings.forEach(h => h.id = uid());
+    state.assets.splice(state.assets.indexOf(a) + 1, 0, c); ui.open.add(c.id);
+    commit('Másolat elkészült – szerkesztheted'); flash(c.id); openEditor(c);
+  }
+  else if (act === 'del') {
+    if (await confirmDlg('Vagyontárgy törlése', `Biztosan törlöd ezt a tételt: <b>${esc(a.name)}</b>?<br><span class="muted">A törlés nem vonható vissza (kivéve, ha van mentésed).</span>`, 'Törlés', true)) {
+      state.assets = state.assets.filter(x => x.id !== id); state.liabilities.forEach(l => { if (l.assetId === id) l.assetId = ''; });
+      ui.open.delete(id); commit('Törölve'); cleanupFiles();
+    }
+  }
+  else if (act === 'add') openEditor(null);
+  else if (act === 'addin') openEditor(null, el.dataset.cat);
+  else if (act === 'catrename') categoryDialog(catById(el.dataset.cat));
+  else if (act === 'catdel') {
+    const c = catById(el.dataset.cat);
+    if (state.assets.some(x => x.categoryId === c.id)) return toast('Csak üres kategória törölhető', true);
+    if (await confirmDlg('Kategória törlése', `Törlöd a(z) <b>${esc(c.name)}</b> kategóriát?`, 'Törlés', true)) { state.categories = state.categories.filter(x => x.id !== c.id); commit('Kategória törölve'); }
+  }
+  else if (act === 'openfile') openStoredFile(el.dataset.file);
+  else if (act === 'sample') loadSample();
+  else if (act === 'restore') $('#restoreInput').click();
+  else if (act === 'clearfilters') { ui.q = ''; ui.cat = ''; ui.onlyMissing = false; $('#q').value = ''; render(); }
+});
+$('#liab').addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  if (el.dataset.act === 'liabadd') liabilityDialog();
+  if (el.dataset.act === 'liabedit') liabilityDialog(state.liabilities.find(l => l.id === el.dataset.lid));
+  if (el.dataset.act === 'liabdel') {
+    const l = state.liabilities.find(x => x.id === el.dataset.lid);
+    if (await confirmDlg('Kötelezettség törlése', `Törlöd: <b>${esc(l.name)}</b>?`, 'Törlés', true)) { state.liabilities = state.liabilities.filter(x => x !== l); commit('Törölve'); }
+  }
+});
+function flash(id) { requestAnimationFrame(() => { const el = $(`.asset[data-id="${CSS.escape(id)}"]`); if (el) { el.classList.add('flash'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); setTimeout(() => el.classList.remove('flash'), 1700); } }); }
+
+/* ============================================================
+   Szerkesztő (oldalpanel)
+   ============================================================ */
+function firstCat(country, type) { return state.categories.find(c => c.country === country && (!type || c.type === type)) || state.categories.find(c => c.country === country); }
+function newDraft(catId) {
+  let cat = catId ? catById(catId) : null;
+  const country = cat ? cat.country : (ui.country === 'ALL' ? 'HU' : ui.country);
+  if (!cat) cat = (ui.cat && catById(ui.cat)) || firstCat(country);
+  if (!cat) { cat = { id: uid(), country, name: 'Egyéb vagyonelemek', type: 'other' }; state.categories.push(cat); }
+  const d = { ...clone(ASSET_DEFAULTS), id: null, country, categoryId: cat.id, kind: cat.type, currency: COUNTRIES[country].cur, valuationDate: state.settings.valuationDate || todayISO() };
+  applyKindDefaults(d, cat);
+  return d;
+}
+function applyKindDefaults(d, cat) {
+  if (cat.type === 'realestate' && !d.ownershipType) d.ownershipType = 'teljes';
+  if (cat.type === 'cash') { d.liquidity = cat.liquidity || d.liquidity || 'azonnal'; if (!d.accountType) d.accountType = d.liquidity === 'lekotott' ? 'lekotott' : 'folyoszamla'; if (!d.valuationMethod) d.valuationMethod = 'kivonat'; }
+}
+function openEditor(asset, catId) {
+  draft = asset ? clone({ ...clone(ASSET_DEFAULTS), ...asset }) : newDraft(catId);
+  draft._curTouched = !!asset;
+  ui.detailsOpen = !!asset; dirty = false;
+  renderEditor(true);
+  $('#drawerWrap').classList.add('on'); document.body.classList.add('drawer-open');
+}
+async function closeEditor(force) {
+  if (!force && dirty && !(await confirmDlg('Kilépsz mentés nélkül?', 'A módosításaid elvesznek.', 'Kilépés mentés nélkül', true))) return;
+  $('#drawerWrap').classList.remove('on'); document.body.classList.remove('drawer-open');
+  draft = null; lastNum = null; renderCalcTarget();
+  setTimeout(cleanupFiles, 400);
+}
+const fText = (f, label, ph = '', cls = '') => `<label class="fld ${cls}"><span>${label}</span><input data-f="${f}" value="${esc(draft[f] ?? '')}" placeholder="${esc(ph)}" autocomplete="off"></label>`;
+const fArea = (f, label, ph = '') => `<label class="fld wide"><span>${label}</span><textarea data-f="${f}" placeholder="${esc(ph)}">${esc(draft[f] ?? '')}</textarea></label>`;
+const fDate = (f, label) => (!V() && f === 'valuationDate') ? '' : `<label class="fld"><span>${label}</span><input type="date" data-f="${f}" value="${esc(draft[f] || '')}"></label>`;
+const fNum = (f, label, suffix, opts = {}) => (!V() && suffix && suffix !== '%') ? '' : `<label class="fld ${opts.cls || ''}"><span>${label}</span><span class="inp-wrap"><input class="num" inputmode="decimal" data-f="${f}" data-t="num" value="${esc(fmtIn(draft[f]))}" placeholder="${esc(opts.ph || '')}" autocomplete="off">${suffix ? `<em>${suffix}</em>` : ''}</span>${opts.help ? `<small>${opts.help}</small>` : ''}</label>`;
+const fSel = (f, label, key, opts = {}) => (!V() && f === 'valuationMethod') ? '' : `<label class="fld ${opts.cls || ''}"><span>${label}</span><select data-f="${f}" ${opts.rerender ? 'data-rerender="1"' : ''}><option value="">– válassz –</option>${OPTS[key].map(([v, l]) => `<option value="${v}" ${draft[f] === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`;
+const seg = (f, opts, cls = '') => `<div class="seg ${cls}">${opts.map(([v, l]) => `<button type="button" data-seg="${f}" data-val="${v}" class="${draft[f] === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+const curSuffix = () => draft.currency === 'EUR' ? 'EUR' : 'Ft';
+
+function renderEditor(resetScroll) {
+  const d = draft, k = d.kind, K = KINDS[k] || KINDS.other, cs = curSuffix(), items = itemsMode(d);
+  const body0 = $('.dr-body'), st = body0 && !resetScroll ? body0.scrollTop : 0;
+  const cats = state.categories.filter(c => c.country === d.country);
+  let details = '';
+  if (k === 'realestate') {
+    details += `<fieldset><legend>Alapadatok</legend>
+      <div class="fld-row">${fText('settlement', 'Település', d.country === 'DE' ? 'pl. Leipzig' : 'pl. Szentendre')}${fSel('propertyType', 'Ingatlan típusa', 'propertyType')}</div>
+      <div class="fld-row">${fText('address', 'Teljes cím', 'pl. 2000 Szentendre, Tómellék utca 5.', 'wide')}</div>
+      <div class="fld-row">${fText('parcel', d.country === 'DE' ? 'Flurstück / Grundbuch-Nr. (opcionális)' : 'Helyrajzi szám (opcionális)', d.country === 'DE' ? '' : 'pl. 1234/5')}
+        <label class="fld"><span>Google Térkép link</span><input data-f="mapsUrl" value="${esc(d.mapsUrl)}" placeholder="https://maps.google.com/…" autocomplete="off"></label></div>
+      <div class="btn-row" style="margin-top:8px"><button type="button" class="btn sm ghost" data-ed="mapgen">${icon('map','sm')} Térképlink készítése a címből</button></div>
+      <div class="fld-row">${fArea('notes', 'Megjegyzések', 'pl. állapot, felújítások, bérbeadás…')}</div></fieldset>
+    <fieldset><legend>Tulajdonviszonyok</legend>
+      <div class="fld-row">${fText('ownerName', 'Tulajdonos neve')}${fSel('ownershipType', 'Tulajdonjog típusa', 'ownershipType', { rerender: true })}</div>
+      <div class="fld-row">${fNum('ownershipPct', 'Tulajdoni hányad', '%', { ph: '100' })}${fSel('usufructExists', 'Haszonélvezeti jog fennáll?', 'usufructExists', { rerender: true })}</div>
+      ${d.usufructExists === 'igen' || d.ownershipType === 'haszonelvezet' || d.ownershipType === 'csupasz' ? `<div class="fld-row">${fText('usufructHolder', 'Haszonélvezeti jog jogosultja (ha ismert)', '', 'wide')}</div>` : ''}
+      ${V() && (d.ownershipType === 'haszonelvezet' || d.ownershipType === 'csupasz') ? `<div class="note info">${icon('alert','sm')}<span>A tulajdoni hányad szerinti érték nem veszi figyelembe a haszonélvezeti jogot. ${d.ownershipType === 'haszonelvezet' ? 'A haszonélvezeti jog értékét lent, az <b>Összesítés</b> résznél add meg kézzel.' : 'Ha szükséges, lent az <b>Összesítés</b> résznél kézzel is megadhatod a beszámítandó értéket.'}</span></div>` : ''}
+      <div class="fld-row">${fDate('acqDate', 'Megszerzés dátuma')}${fSel('acqTitle', 'Megszerzés jogcíme', 'acqTitle')}</div>
+      <div class="fld-row">${fNum('acqTotalValue', 'Megszerzéskori teljes ingatlanérték', cs)}${fNum('acqShareValue', 'Megszerzett hányad megszerzéskori értéke', cs, { help: 'Üresen hagyva: teljes érték × hányad' })}</div></fieldset>
+    ${V() ? `<fieldset><legend>Értékadatok</legend>
+      <div class="fld-row">${fDate('valuationDate', 'Értékelés dátuma')}${fSel('valuationMethod', 'Érték megállapításának módja', 'valuationMethod')}</div>
+      <div class="fld-row">${fNum('adjustment', 'Egyedi értékkorrekció (+/−)', cs, { help: 'Hozzáadódik a hányadra jutó értékhez' })}
+        <label class="fld"><span>Tulajdoni hányadra jutó aktuális érték</span><input readonly data-live="share" value=""><small>Automatikusan számolva</small></label></div></fieldset>` : ''}`;
+  } else if (k === 'cash') {
+    details += `<fieldset><legend>Számla adatai</legend>
+      <div class="fld-row">${fText('bankName', 'Bank neve', 'pl. OTP Bank')}${fSel('accountType', 'Számlatípus', 'accountType')}</div>
+      <div class="fld-row">${fSel('liquidity', 'Hozzáférhetőség', 'liquidity', { rerender: true })}${d.liquidity !== 'azonnal' ? fDate('maturityDate', 'Lejárati dátum') : fNum('ownershipPct', 'Tulajdoni hányad', '%')}</div>
+      <div class="fld-row">${fDate('valuationDate', 'Egyenleg dátuma')}${d.liquidity !== 'azonnal' ? fNum('ownershipPct', 'Tulajdoni hányad', '%') : '<span></span>'}</div>
+      <div class="fld-row">${fArea('notes', 'Megjegyzés')}</div>
+      <div class="note info">${icon('shield','sm')}<span>Ide ne írj jelszót, PIN-kódot, teljes kártyaszámot vagy netbanki belépési adatot – erre nincs szükség.</span></div></fieldset>`;
+  } else if (k === 'securities') {
+    details += `<fieldset><legend>Portfólió</legend>
+      <div class="fld-row">${fText('provider', 'Szolgáltató / bank', 'pl. comdirect, OTP')}<div class="fld"><span>Rögzítés módja</span>${seg('secMode', [['total', 'Egy összegként'], ['items', 'Tételesen']], 'full')}</div></div>
+      ${items ? '' : `<div class="fld-row">${fSel('secType', 'Értékpapír típusa', 'secType')}${fText('isin', 'ISIN (opcionális)', 'pl. IE00B4L5Y983')}</div>`}
+      <div class="fld-row">${fDate('acqDate', 'Megszerzés dátuma')}${items ? fNum('ownershipPct', 'Tulajdoni hányad', '%') : fNum('costBasis', 'Bekerülési érték', cs)}</div>
+      <div class="fld-row">${fDate('valuationDate', 'Értékelés dátuma')}${items ? '<span></span>' : fNum('ownershipPct', 'Tulajdoni hányad', '%')}</div>
+      <div class="fld-row">${fArea('notes', 'Megjegyzés')}</div></fieldset>`;
+    if (items) {
+      details += `<fieldset><legend>Értékpapírok (${d.holdings.length})</legend>
+        ${V() ? '<p class="hint">A portfólió értéke a tételek összege – így semmi nem számolódik duplán. Az összérték automatikus (darab × egységár), de felülírható.</p>' : ''}
+        ${d.holdings.map((h, i) => `<div class="sub-card">
+          <div class="sub-head"><span>${i + 1}. tétel</span><button type="button" class="icon-btn sm" data-ed="hdel" data-i="${i}" title="Tétel törlése">${icon('trash','sm')}</button></div>
+          <div class="fld-row" style="margin-top:6px"><label class="fld"><span>Megnevezés</span><input data-h="${i}" data-hf="name" value="${esc(h.name)}" placeholder="pl. iShares Core MSCI World"></label>
+            <label class="fld"><span>Típus</span><select data-h="${i}" data-hf="type"><option value="">– válassz –</option>${OPTS.secType.map(([v, l]) => `<option value="${v}" ${h.type === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div>
+          <div class="fld-row c3"><label class="fld"><span>ISIN</span><input data-h="${i}" data-hf="isin" value="${esc(h.isin)}"></label>
+            <label class="fld"><span>Darabszám</span><span class="inp-wrap"><input class="num" inputmode="decimal" data-h="${i}" data-hf="qty" data-t="num" value="${esc(fmtIn(h.qty))}"><em>db</em></span></label>
+            ${V() ? `<label class="fld"><span>Egységár</span><span class="inp-wrap"><input class="num" inputmode="decimal" data-h="${i}" data-hf="unitPrice" data-t="num" value="${esc(fmtIn(h.unitPrice))}"><em>${cs}</em></span></label>` : `<label class="fld"><span>Megszerzés dátuma</span><input type="date" data-h="${i}" data-hf="acqDate" value="${esc(h.acqDate)}"></label>`}</div>
+          ${V() ? `<div class="fld-row c3"><label class="fld"><span>Összérték</span><span class="inp-wrap"><input class="num" inputmode="decimal" data-h="${i}" data-hf="totalOverride" data-t="num" data-live="hph${i}" value="${esc(fmtIn(h.totalOverride))}" placeholder=""><em>${cs}</em></span></label>
+            <label class="fld"><span>Megszerzés dátuma</span><input type="date" data-h="${i}" data-hf="acqDate" value="${esc(h.acqDate)}"></label>
+            <label class="fld"><span>Bekerülési érték</span><span class="inp-wrap"><input class="num" inputmode="decimal" data-h="${i}" data-hf="costBasis" data-t="num" value="${esc(fmtIn(h.costBasis))}"><em>${cs}</em></span></label></div>` : ''}
+        </div>`).join('')}
+        <div class="btn-row" style="margin-top:12px"><button type="button" class="btn sm" data-ed="hadd">${icon('plus','sm')} Értékpapír hozzáadása</button></div></fieldset>`;
+    }
+  } else {
+    details += `<fieldset><legend>Adatok</legend>
+      <div class="fld-row">${fText('otherType', 'Típus', 'pl. gépjármű, műtárgy, követelés')}${fNum('ownershipPct', 'Tulajdoni hányad', '%')}</div>
+      <div class="fld-row">${fDate('acqDate', 'Megszerzés dátuma')}${fNum('acqValue', 'Megszerzéskori érték', cs)}</div>
+      <div class="fld-row">${fDate('valuationDate', 'Értékelés dátuma')}${fSel('valuationMethod', 'Érték megállapításának módja', 'valuationMethod')}</div>
+      <div class="fld-row">${fArea('notes', 'Megjegyzés')}</div></fieldset>`;
+  }
+  details += `${V() ? `<fieldset><legend>Összesítés</legend>
+    <label class="chk"><input type="checkbox" data-f="include" ${d.include ? 'checked' : ''}> Beszámítandó az összesítésbe</label>
+    <div class="fld-row">${fNum('manualCounted', d.ownershipType === 'haszonelvezet' && k === 'realestate' ? 'Haszonélvezeti jog értéke (ez számít bele)' : 'Kézzel megadott összesítési érték (opcionális)', cs, { cls: 'wide', help: 'Ha kitöltöd, a számított érték helyett ez kerül az összesítésbe – pl. haszonélvezeti jog esetén.' })}</div></fieldset>` : ''}
+  <fieldset><legend>Dokumentumok</legend>
+    ${d.documents.map((doc, i) => `<div class="sub-card">
+      <div class="fld-row" style="grid-template-columns:1fr 1fr auto;align-items:end">
+        <label class="fld"><span>Típus</span><select data-d="${i}" data-df="type">${OPTS.docType.map(([v, l]) => `<option value="${v}" ${doc.type === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label class="fld"><span>Megnevezés</span><input data-d="${i}" data-df="name" value="${esc(doc.name)}" placeholder="pl. Tulajdoni lap 2024"></label>
+        <button type="button" class="icon-btn sm" data-ed="ddel" data-i="${i}" title="Dokumentum törlése" style="margin-bottom:5px">${icon('trash','sm')}</button></div>
+      <div class="fld-row"><label class="fld wide"><span>Link (pl. Google Drive, OneDrive)</span><input data-d="${i}" data-df="url" value="${esc(doc.url)}" placeholder="https://…" autocomplete="off"></label></div>
+      <div class="fld-row"><label class="fld wide"><span>Megjegyzés</span><input data-d="${i}" data-df="note" value="${esc(doc.note)}"></label></div>
+      ${store.ok ? `<div class="attach">${doc.fileId ? `${icon('clip','sm')}<b>${esc(doc.fileName)}</b><span class="faint">${esc(fmtSize(doc.fileSize))}</span><button type="button" class="btn sm ghost" data-ed="fopen" data-i="${i}">Megnyitás</button><button type="button" class="btn sm danger-ghost" data-ed="fdel" data-i="${i}">Eltávolítás</button>` : `<label class="btn sm ghost">${icon('clip','sm')} Helyi fájl csatolása<input type="file" data-attach="${i}" hidden></label><span class="faint">A fájl csak ebben a böngészőben tárolódik.</span>`}</div>` : ''}
+    </div>`).join('')}
+    <div class="btn-row" style="margin-top:12px"><button type="button" class="btn sm" data-ed="dadd">${icon('plus','sm')} Dokumentum hozzáadása</button></div></fieldset>`;
+
+  $('#drawer').innerHTML = `
+    <div class="dr-head"><div><span class="eyebrow">${d.id ? 'Vagyontárgy szerkesztése' : 'Új vagyontárgy'}</span><h2 data-live="title">${esc(d.name) || (d.id ? 'Névtelen' : 'Új vagyontárgy')}</h2></div><button class="icon-btn" data-ed="close" title="Bezárás (Esc)">${icon('x')}</button></div>
+    <div class="dr-body">
+      ${d.id ? '' : `<p class="lead">${V() ? 'Elég a megnevezés és az érték' : 'Elég a megnevezés'} – minden más később is kiegészíthető.</p>`}
+      <div class="box">
+        <label class="fld"><span>Megnevezés</span><input data-f="name" value="${esc(d.name)}" placeholder="${esc(K.ph)}" autocomplete="off" id="fName"></label>
+        <div class="fld-row" style="grid-template-columns:1fr auto" ${V() ? '' : 'hidden'}>
+          <label class="fld"><span>${items ? 'Portfólió értéke (a tételekből számolva)' : K.valLabel}</span><span class="inp-wrap"><input class="num big" inputmode="decimal" ${items ? 'readonly data-live="itemsum"' : 'data-f="value" data-t="num"'} value="${esc(fmtIn(items ? grossOrig(d) : d.value))}" placeholder="0" autocomplete="off"><em>${cs}</em></span></label>
+          <div class="fld"><span>Pénznem</span>${seg('currency', [['HUF', 'Ft'], ['EUR', 'EUR']])}</div>
+        </div>
+        <div class="fld-row" style="grid-template-columns:auto 1fr">
+          <div class="fld"><span>Ország</span>${seg('country', [['HU', flag('HU') + ' Magyarország'], ['DE', flag('DE') + ' Németország']], 'full')}</div>
+          <label class="fld"><span>Kategória</span><select data-ed-cat="1">${cats.map(c => `<option value="${esc(c.id)}" ${c.id === d.categoryId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}<option value="__new">+ Új kategória…</option></select></label>
+        </div>
+        <div class="preview" data-live="preview" ${V() ? '' : 'hidden'}></div>
+      </div>
+      <details class="more" ${ui.detailsOpen ? 'open' : ''}><summary>${icon('list')} Részletes adatok <small>– opcionális, később is kitölthető</small>${icon('chev', 'chev')}</summary><div class="more-body">${details}</div></details>
+    </div>
+    <div class="dr-foot"><span class="sp" data-live="missing"></span><button class="btn ghost" data-ed="close">Mégse</button><button class="btn primary" data-ed="save">${icon('check')} Mentés</button></div>`;
+  $('#drawer details.more').addEventListener('toggle', e => { ui.detailsOpen = e.target.open; });
+  const body = $('.dr-body'); body.scrollTop = st;
+  updateLive();
+  if (resetScroll) setTimeout(() => { const n = $('#fName'); if (n && !d.id) n.focus(); }, 280);
+}
+function updateLive() {
+  if (!draft) return;
+  const d = draft, cs = d.currency;
+  const t = $('[data-live=title]'); if (t) t.textContent = d.name || (d.id ? 'Névtelen' : 'Új vagyontárgy');
+  const p = $('[data-live=preview]');
+  if (p) {
+    const c = countedOrig(d);
+    p.classList.toggle('off', !d.include);
+    p.innerHTML = !d.include ? `<span>Ez a tétel nem számít bele az összesítésbe.</span>` :
+      usufructOnly(d) && !isNum(d.manualCounted) ? `<span>Haszonélvezeti jog: add meg az értékét a Részletes adatok → Összesítés résznél.</span><b>0 Ft</b>` :
+      `<span>Összesítésbe számít${pctOf(d) !== 100 ? ` (${grp(pctOf(d), decimalsOf(pctOf(d)))}% tulajdon)` : ''}${isNum(d.manualCounted) ? ' (kézi érték)' : ''}:</span><b>${money(toHUF(c, cs))}${cs === 'EUR' ? ` <span style="font-weight:500">· ${money(c, 'EUR')}</span>` : ''}</b>`;
+  }
+  const sh = $('[data-live=share]'); if (sh) sh.value = isNum(shareOrig(d)) ? money(shareOrig(d), cs) : '';
+  const is = $('[data-live=itemsum]'); if (is) is.value = fmtIn(round2(grossOrig(d)));
+  (d.holdings || []).forEach((h, i) => { const el = $(`[data-live=hph${i}]`); if (el) el.placeholder = isNum(h.qty) && isNum(h.unitPrice) ? grp(round2(h.qty * h.unitPrice), 2) + ' (auto)' : 'auto'; });
+  const m = $('[data-live=missing]'); if (m) { const mf = missingFields(d); m.textContent = mf.length ? `Hiányzik még: ${mf.slice(0, 3).join(', ')}${mf.length > 3 ? '…' : ''} – így is menthető.` : ''; }
+}
+function readEl(el) { if (el.type === 'checkbox') return el.checked; if (el.dataset.t === 'num') return parseNum(el.value); return el.value; }
+const drawer = $('#drawer');
+drawer.addEventListener('input', e => {
+  const el = e.target; if (!draft) return;
+  if (el.dataset.f) {
+    const f = el.dataset.f; draft[f] = readEl(el);
+    if (f === 'ownershipPct' && draft.kind === 'realestate' && isNum(draft.ownershipPct)) {
+      const sel = $('select[data-f=ownershipType]');
+      if (draft.ownershipPct < 100 && draft.ownershipType === 'teljes') { draft.ownershipType = 'resz'; if (sel) sel.value = 'resz'; }
+      if (draft.ownershipPct === 100 && draft.ownershipType === 'resz') { draft.ownershipType = 'teljes'; if (sel) sel.value = 'teljes'; }
+    }
+  } else if (el.dataset.hf) draft.holdings[+el.dataset.h][el.dataset.hf] = readEl(el);
+  else if (el.dataset.df) draft.documents[+el.dataset.d][el.dataset.df] = readEl(el);
+  else return;
+  dirty = true; updateLive();
+});
+drawer.addEventListener('change', async e => {
+  const el = e.target; if (!draft) return;
+  if (el.dataset.rerender) { renderEditor(); return; }
+  if (el.dataset.edCat) {
+    if (el.value === '__new') { const c = await categoryDialog(null, draft.country); if (c) setDraftCat(c); else el.value = draft.categoryId; return; }
+    setDraftCat(catById(el.value)); return;
+  }
+  if (el.dataset.attach != null) {
+    const f = el.files[0]; if (!f) return; const doc = draft.documents[+el.dataset.attach];
+    if (f.size > 30 * 1048576 && !(await confirmDlg('Nagy fájl', `A fájl ${fmtSize(f.size)} méretű. A nagy fájlok lassíthatják a mentést. Folytatod?`, 'Csatolás'))) return;
+    const id = uid();
+    try { await store.putFile(id, { blob: f, name: f.name, type: f.type, size: f.size }); } catch (err) { return toast('A fájl nem menthető: ' + err.message, true); }
+    Object.assign(doc, { fileId: id, fileName: f.name, fileSize: f.size, fileType: f.type }); if (!doc.name) doc.name = f.name.replace(/\.[^.]+$/, '');
+    dirty = true; renderEditor(); toast('Fájl csatolva');
+  }
+});
+drawer.addEventListener('focusout', e => { const el = e.target; if (el.classList && el.classList.contains('num') && !el.readOnly) { const v = parseNum(el.value); if (v != null) el.value = fmtIn(v); } });
+function setDraftCat(cat) {
+  draft.categoryId = cat.id; draft.kind = cat.type;
+  if (cat.type === 'cash' && cat.liquidity) { draft.liquidity = cat.liquidity; draft.accountType = cat.liquidity === 'lekotott' ? 'lekotott' : (draft.accountType || 'folyoszamla'); }
+  applyKindDefaults(draft, cat); dirty = true; renderEditor();
+}
+drawer.addEventListener('click', async e => {
+  const s = e.target.closest('[data-seg]');
+  if (s) {
+    const f = s.dataset.seg, v = s.dataset.val; if (draft[f] === v) return;
+    draft[f] = v; dirty = true;
+    if (f === 'currency') draft._curTouched = true;
+    if (f === 'country') {
+      if (!draft._curTouched) draft.currency = COUNTRIES[v].cur;
+      const old = catById(draft.categoryId); const nc = state.categories.find(c => c.country === v && old && c.name === old.name) || firstCat(v, draft.kind) || firstCat(v);
+      if (nc) { draft.categoryId = nc.id; draft.kind = nc.type; applyKindDefaults(draft, nc); }
+    }
+    if (f === 'secMode' && v === 'items' && !draft.holdings.length) draft.holdings.push({ id: uid(), name: '', type: '', isin: draft.isin || '', qty: null, unitPrice: null, totalOverride: null, acqDate: '', costBasis: null });
+    renderEditor(); return;
+  }
+  const b = e.target.closest('[data-ed]'); if (!b) return;
+  const act = b.dataset.ed, i = +b.dataset.i;
+  if (act === 'close') closeEditor();
+  else if (act === 'save') saveDraft();
+  else if (act === 'hadd') { draft.holdings.push({ id: uid(), name: '', type: '', isin: '', qty: null, unitPrice: null, totalOverride: null, acqDate: '', costBasis: null }); dirty = true; renderEditor(); }
+  else if (act === 'hdel') { draft.holdings.splice(i, 1); dirty = true; renderEditor(); }
+  else if (act === 'dadd') { draft.documents.push({ id: uid(), type: draft.kind === 'cash' ? 'kivonat' : (draft.documents.length ? 'egyeb' : (draft.kind === 'realestate' ? 'tulajdoni_lap' : 'egyeb')), name: '', url: '', note: '', fileId: null, fileName: '', fileSize: null, fileType: '' }); dirty = true; renderEditor(); }
+  else if (act === 'ddel') { draft.documents.splice(i, 1); dirty = true; renderEditor(); }
+  else if (act === 'fopen') openStoredFile(draft.documents[i].fileId);
+  else if (act === 'fdel') { Object.assign(draft.documents[i], { fileId: null, fileName: '', fileSize: null, fileType: '' }); dirty = true; renderEditor(); }
+  else if (act === 'mapgen') {
+    const q = [draft.address, draft.settlement].filter(Boolean).join(', ');
+    if (!q) return toast('Előbb add meg a címet vagy a települést', true);
+    draft.mapsUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q); dirty = true; renderEditor();
+  }
+});
+$('#drawerWrap .scrim').addEventListener('click', () => closeEditor());
+function saveDraft() {
+  const d = clone(draft); Object.keys(d).forEach(k => k.startsWith('_') && delete d[k]);
+  d.name = (d.name || '').trim() || 'Névtelen vagyontárgy';
+  d.documents = (d.documents || []).filter(x => x.name || x.url || x.fileId || x.note);
+  d.holdings = (d.holdings || []).filter(h => h.name || h.isin || isNum(h.qty) || isNum(h.unitPrice) || isNum(h.totalOverride));
+  d.kind = catById(d.categoryId)?.type || d.kind;
+  if (itemsMode(d)) d.value = round2(grossOrig(d));
+  if (!isNum(d.ownershipPct)) d.ownershipPct = 100;
+  d.updatedAt = new Date().toISOString();
+  if (d.id) { const idx = state.assets.findIndex(a => a.id === d.id); if (idx >= 0) state.assets[idx] = d; else state.assets.push(d); }
+  else { d.id = uid(); d.createdAt = d.updatedAt; state.assets.push(d); }
+  if (ui.country !== 'ALL' && ui.country !== d.country) ui.country = d.country;
+  ui.open.add(d.id); dirty = false;
+  closeEditor(true); commit('Mentve'); flash(d.id);
+}
+
+/* ============================================================
+   Fájlok (csatolmányok)
+   ============================================================ */
+async function openStoredFile(id) {
+  try {
+    const rec = await store.getFile(id); if (!rec) return toast('A fájl nem található ebben a böngészőben', true);
+    const url = URL.createObjectURL(rec.blob);
+    const viewable = /^application\/pdf$|^image\/(png|jpe?g|gif|webp)$|^text\/plain$/.test(rec.type || '');
+    const a = document.createElement('a'); a.href = url; a.rel = 'noopener';
+    if (viewable) a.target = '_blank'; else a.download = rec.name || 'dokumentum';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) { toast('Nem sikerült megnyitni: ' + e.message, true); }
+}
+async function cleanupFiles() {
+  if (!store.ok) return;
+  const used = new Set(); state.assets.forEach(a => (a.documents || []).forEach(d => d.fileId && used.add(d.fileId)));
+  if (draft) (draft.documents || []).forEach(d => d.fileId && used.add(d.fileId));
+  try { for (const k of await store.fileKeys()) if (!used.has(k)) await store.delFile(k); } catch (e) { console.warn(e); }
+}
+function blobToDataUrl(blob) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(blob); }); }
+function dataUrlToBlob(du) { const [h, b64] = du.split(','); const type = (h.match(/data:([^;]*)/) || [])[1] || 'application/octet-stream'; const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type }); }
+
+/* ============================================================
+   Mentés eszközre (JSON) és visszaállítás
+   ============================================================ */
+async function buildBackup() {
+  const files = [];
+  if (store.ok) {
+    const used = new Set(); state.assets.forEach(a => (a.documents || []).forEach(d => d.fileId && used.add(d.fileId)));
+    for (const id of used) { try { const r = await store.getFile(id); if (r) files.push({ id, name: r.name, type: r.type, size: r.size, dataUrl: await blobToDataUrl(r.blob) }); } catch {} }
+  }
+  return { app: 'lili-vagyonnyilvantarto', version: 1, exportedAt: new Date().toISOString(), data: clone(state), files };
+}
+function downloadBlob(blob, name) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000); }
+async function downloadBackup() {
+  const data = await buildBackup();
+  downloadBlob(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }), `vagyon_mentes_${todayISO()}.json`);
+  state.settings.lastBackup = new Date().toISOString(); commit();
+  toast('Mentés letöltve az eszközre (Letöltések mappa)');
+}
+$('#restoreInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  let obj; try { obj = JSON.parse(await f.text()); } catch { return openModal({ title: 'Hibás fájl', html: '<p>A kiválasztott fájl nem olvasható JSON-mentés.</p>', actions: [{ label: 'Rendben', kind: 'primary' }] }); }
+  restoreFromObject(obj, f.name);
+});
+async function restoreFromObject(obj, fname) {
+  const v = validateBackup(obj);
+  if (!v.ok) return openModal({ title: 'A mentés nem tölthető be', html: `<p>${v.errors.map(esc).join('<br>')}</p>`, actions: [{ label: 'Rendben', kind: 'primary' }] });
+  const ns = normalizeState(v.data);
+  const ok = await confirmDlg('Mentés visszaállítása', `<p><b>${esc(fname)}</b>${obj.exportedAt ? ` · készült: ${esc(new Date(obj.exportedAt).toLocaleString('hu-HU'))}` : ''}</p>
+    <div class="note ok">${icon('check','sm')}<span>A fájl rendben van: ${ns.assets.length} vagyontárgy, ${ns.categories.length} kategória, ${ns.liabilities.length} kötelezettség, ${v.files.length} csatolt fájl.</span></div>
+    ${state.assets.length ? `<div class="note warn">${icon('alert','sm')}<span>A jelenlegi ${state.assets.length} tétel helyére a mentés tartalma kerül.</span></div>` : ''}`, 'Visszaállítás');
+  if (!ok) return;
+  if (store.ok) { await store.clearFiles(); for (const fl of v.files) { try { const blob = dataUrlToBlob(fl.dataUrl); await store.putFile(fl.id, { blob, name: fl.name, type: fl.type, size: fl.size }); } catch {} } }
+  ns.settings.lastBackup = obj.exportedAt || ns.settings.lastBackup;
+  state = ns; ui.open.clear(); commit('Visszaállítás kész');
+}
+
+/* ============================================================
+   Modális ablakok
+   ============================================================ */
+function openModal({ title, html, actions = [], wide = false, onMount, onClose }) {
+  const m = document.createElement('div'); m.className = 'modal-layer';
+  m.innerHTML = `<div class="scrim"></div><div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true"><div class="m-head"><h3>${title}</h3><button class="icon-btn sm" data-m="close" title="Bezárás">${icon('x')}</button></div><div class="m-body">${html}</div>${actions.length ? `<div class="m-foot">${actions.map((a, i) => `<button class="btn ${a.kind || 'ghost'}" data-m="${i}">${a.label}</button>`).join('')}</div>` : ''}</div>`;
+  $('#modalWrap').appendChild(m); requestAnimationFrame(() => m.classList.add('on'));
+  let closed = false;
+  const close = () => { if (closed) return; closed = true; m.classList.remove('on'); setTimeout(() => m.remove(), 180); onClose && onClose(); };
+  m._close = close;
+  m.addEventListener('click', async e => {
+    if (e.target.classList.contains('scrim') || e.target.closest('[data-m=close]')) return close();
+    const b = e.target.closest('[data-m]'); if (!b) return;
+    const a = actions[+b.dataset.m]; const r = a.onClick ? await a.onClick(m) : undefined; if (r !== false) close();
+  });
+  m.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'file') { const p = m.querySelector('.m-foot .btn.primary'); if (p) { e.preventDefault(); p.click(); } } });
+  onMount && onMount(m);
+  setTimeout(() => { const f = m.querySelector('.m-body input:not([type=file]):not([type=checkbox]), .m-foot .btn.primary'); f && f.focus(); }, 50);
+  return m;
+}
+function confirmDlg(title, html, ok = 'Igen', danger = false) {
+  return new Promise(res => openModal({ title, html: html.startsWith('<') ? html : `<p>${html}</p>`, onClose: () => res(false), actions: [{ label: 'Mégse', onClick: () => res(false) }, { label: ok, kind: danger ? 'danger' : 'primary', onClick: () => res(true) }] }));
+}
+function categoryDialog(cat, country) {
+  return new Promise(res => {
+    const isNew = !cat, c0 = country || (ui.country === 'ALL' ? 'HU' : ui.country);
+    const has = cat && state.assets.some(a => a.categoryId === cat.id);
+    openModal({
+      title: isNew ? 'Új kategória' : 'Kategória átnevezése',
+      html: `<label class="fld"><span>Kategória neve</span><input id="cName" value="${esc(cat ? cat.name : '')}" placeholder="pl. Nyaralók"></label>
+        ${isNew ? `<div class="fld-row"><label class="fld"><span>Ország</span><select id="cCountry"><option value="HU" ${c0 === 'HU' ? 'selected' : ''}>Magyarország</option><option value="DE" ${c0 === 'DE' ? 'selected' : ''}>Németország</option></select></label>` : '<div class="fld-row">'}
+        ${!has ? `<label class="fld"><span>Milyen tételek kerülnek bele?</span><select id="cType">${Object.entries(KINDS).map(([k, v]) => `<option value="${k}" ${cat && cat.type === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select></label>` : ''}</div>
+        <p class="hint">A típus határozza meg, milyen részletes mezők jelennek meg (pl. ingatlannál cím, tulajdoni hányad).</p>`,
+      onClose: () => res(null),
+      actions: [{ label: 'Mégse' }, { label: isNew ? 'Létrehozás' : 'Mentés', kind: 'primary', onClick: m => {
+        const name = $('#cName', m).value.trim(); if (!name) { toast('Adj meg egy nevet', true); return false; }
+        const type = $('#cType', m) ? $('#cType', m).value : cat.type;
+        if (isNew) { const nc = { id: uid(), country: $('#cCountry', m).value, name, type }; if (type === 'cash') nc.liquidity = 'azonnal'; state.categories.push(nc); commit('Kategória létrehozva'); res(nc); }
+        else { cat.name = name; cat.type = type; commit('Kategória mentve'); res(cat); }
+      } }]
+    });
+  });
+}
+function liabilityDialog(l) {
+  const isNew = !l; const x = l ? clone(l) : { id: uid(), name: '', lender: '', country: ui.country === 'ALL' ? 'HU' : ui.country, assetId: '', amount: null, currency: ui.country === 'DE' ? 'EUR' : 'HUF', date: todayISO(), note: '', include: true };
+  openModal({
+    title: isNew ? 'Új kötelezettség' : 'Kötelezettség szerkesztése',
+    html: `<label class="fld"><span>Megnevezés</span><input id="lName" value="${esc(x.name)}" placeholder="pl. Lakáshitel – Lipcse"></label>
+      <div class="fld-row"><label class="fld"><span>Hitelező</span><input id="lLender" value="${esc(x.lender)}" placeholder="pl. Sparkasse"></label>
+        <label class="fld"><span>Ország</span><select id="lCountry"><option value="HU" ${x.country === 'HU' ? 'selected' : ''}>Magyarország</option><option value="DE" ${x.country === 'DE' ? 'selected' : ''}>Németország</option></select></label></div>
+      <div class="fld-row"><label class="fld"><span>Fennálló tartozás</span><span class="inp-wrap"><input class="num" id="lAmount" inputmode="decimal" value="${esc(fmtIn(x.amount))}"><em></em></span></label>
+        <label class="fld"><span>Pénznem</span><select id="lCur"><option value="HUF" ${x.currency === 'HUF' ? 'selected' : ''}>Ft</option><option value="EUR" ${x.currency === 'EUR' ? 'selected' : ''}>EUR</option></select></label></div>
+      <div class="fld-row"><label class="fld"><span>Kapcsolódó vagyontárgy</span><select id="lAsset"><option value="">– nincs –</option>${state.assets.map(a => `<option value="${esc(a.id)}" ${x.assetId === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></label>
+        <label class="fld"><span>Egyenleg dátuma</span><input type="date" id="lDate" value="${esc(x.date)}"></label></div>
+      <div class="fld-row"><label class="fld wide"><span>Megjegyzés</span><input id="lNote" value="${esc(x.note)}"></label></div>
+      <label class="chk"><input type="checkbox" id="lInc" ${x.include ? 'checked' : ''}> Levonandó a nettó vagyonból</label>`,
+    onMount: m => { const upd = () => $('#lAmount', m).nextElementSibling.textContent = $('#lCur', m).value === 'EUR' ? 'EUR' : 'Ft'; upd(); $('#lCur', m).addEventListener('change', upd); $('#lAmount', m).addEventListener('blur', e => { const v = parseNum(e.target.value); if (v != null) e.target.value = fmtIn(v); }); },
+    actions: [{ label: 'Mégse' }, { label: 'Mentés', kind: 'primary', onClick: m => {
+      Object.assign(x, { name: $('#lName', m).value.trim() || 'Kötelezettség', lender: $('#lLender', m).value.trim(), country: $('#lCountry', m).value, amount: parseNum($('#lAmount', m).value), currency: $('#lCur', m).value, assetId: $('#lAsset', m).value, date: $('#lDate', m).value, note: $('#lNote', m).value.trim(), include: $('#lInc', m).checked });
+      if (isNew) state.liabilities.push(x); else state.liabilities[state.liabilities.findIndex(y => y.id === x.id)] = x;
+      commit('Mentve');
+    } }]
+  });
+}
+function openSettings(focusRate) {
+  const s = state.settings;
+  openModal({
+    title: 'Beállítások és mentés', wide: true,
+    html: `<div class="set-sec"><h4>Árfolyam és értékelési dátum</h4>
+        <div class="fld-row" style="margin-top:0"><label class="fld"><span>1 EUR =</span><span class="inp-wrap"><input class="num" id="sRate" inputmode="decimal" value="${esc(fmtIn(s.eurHuf))}"><em>Ft</em></span></label>
+        <label class="fld"><span>Értékelési dátum</span><input type="date" id="sDate" value="${esc(s.valuationDate)}"></label></div>
+        <p class="hint">Az eurós tételeket ezzel az árfolyammal számolja át forintra. Az értékelési dátum jelzi, melyik napra vonatkozik az összesítés (új tételeknél ez lesz az alapértelmezett dátum).</p></div>
+      <div class="set-sec"><h4>Mentés az eszközre</h4>
+        <p class="muted" style="margin:0 0 6px">Minden módosítás automatikusan mentődik ebben a böngészőben. Hogy egy böngészőadat-törlés vagy gépcsere után se kelljen elölről kezdeni, ments fájlba is – ez a fájl a te gépeden marad, nem kerül fel az internetre.</p>
+        <div class="btn-row"><button class="btn primary" id="sBackup">${icon('save','sm')} Mentés eszközre (.json)</button><button class="btn" id="sRestore">${icon('folder','sm')} Mentés betöltése fájlból</button></div>
+        ${fsSupported ? `<div class="sub-card" style="margin-top:12px"><div class="switch" style="padding:0"><span><b>Automatikus mentés fájlba</b><br><span class="faint" style="font-size:13px">${linked.state === 'ok' ? `Minden módosítás után ide is ment: <b>${esc(linked.name)}</b>` : linked.state === 'needs-permission' ? `Szünetel: <b>${esc(linked.name)}</b> – engedély szükséges` : 'Válassz egy fájlt a gépeden (pl. a Dokumentumok mappában), és az alkalmazás minden módosítás után automatikusan frissíti.'}</span></span>
+          ${linked.state === 'ok' ? `<button class="btn sm ghost" id="sUnlink">Kikapcsolás</button>` : linked.state === 'needs-permission' ? `<button class="btn sm" id="sRelink">Folytatás</button>` : `<button class="btn sm" id="sLink">Fájl kiválasztása</button>`}</div></div>` : ''}
+        <p class="hint">Utolsó mentés eszközre: ${s.lastBackup ? esc(new Date(s.lastBackup).toLocaleString('hu-HU')) : 'még nem volt'}</p>
+        <div class="note warn">${icon('alert','sm')}<span>Ha törlöd a böngésző előzményeit/webhelyadatait, vagy másik böngészőt használsz, a böngészőben tárolt adatok nem lesznek elérhetők – ilyenkor a mentésfájlból tudod visszatölteni őket.</span></div></div>
+      <div class="set-sec"><h4>Megjelenés</h4>
+        <div class="switch"><span>Téma</span>${'<div class="seg" id="sTheme"><button type="button" data-v="light" class="' + (s.theme !== 'dark' ? 'on' : '') + '">Világos</button><button type="button" data-v="dark" class="' + (s.theme === 'dark' ? 'on' : '') + '">Sötét</button></div>'}</div>
+        <label class="switch"><span>Értékek és összegek megjelenítése<br><span class="faint" style="font-size:13px">Kikapcsolva csak nyilvántartás marad: nincsenek összegek, árfolyam, kalkulátor és kötelezettségek. A már beírt értékek megmaradnak.</span></span><input type="checkbox" id="sVals" ${V() ? 'checked' : ''}></label>
+        <label class="switch"><span>Kalkulátor gomb megjelenítése<br><span class="faint" style="font-size:13px">Kikapcsolva a kalkulátor teljesen eltűnik.</span></span><input type="checkbox" id="sCalc" ${s.showCalc ? 'checked' : ''}></label></div>
+      <div class="set-sec"><h4>Mintaadatok és törlés</h4>
+        <div class="btn-row"><button class="btn" id="sSample">Mintaadatok betöltése</button><button class="btn danger-ghost" id="sWipe">${icon('trash','sm')} Minden adat törlése</button></div></div>`,
+    actions: [{ label: 'Kész', kind: 'primary' }],
+    onMount: m => {
+      const r = $('#sRate', m);
+      r.addEventListener('change', () => { const v = parseNum(r.value); if (v && v > 0) { s.eurHuf = v; r.value = fmtIn(v); commit(); } else { toast('Érvénytelen árfolyam', true); r.value = fmtIn(s.eurHuf); } });
+      $('#sDate', m).addEventListener('change', e => { if (e.target.value) { s.valuationDate = e.target.value; commit(); } });
+      $('#sBackup', m).onclick = () => downloadBackup();
+      $('#sRestore', m).onclick = () => { m._close(); $('#restoreInput').click(); };
+      if ($('#sLink', m)) $('#sLink', m).onclick = async () => { if (await chooseLinkedFile()) { m._close(); openSettings(); } };
+      if ($('#sRelink', m)) $('#sRelink', m).onclick = async () => { await reconnectLinkedFile(); m._close(); openSettings(); };
+      if ($('#sUnlink', m)) $('#sUnlink', m).onclick = async () => { await unlinkFile(); m._close(); openSettings(); };
+      $('#sTheme', m).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; s.theme = b.dataset.v; $$('#sTheme button', m).forEach(x => x.classList.toggle('on', x === b)); commit(); });
+      $('#sVals', m).addEventListener('change', e => setValues(e.target.checked));
+      $('#sCalc', m).addEventListener('change', e => { s.showCalc = e.target.checked; if (!s.showCalc) $('#calc').hidden = true; commit(); });
+      $('#sSample', m).onclick = () => { m._close(); loadSample(); };
+      $('#sWipe', m).onclick = async () => {
+        if (await confirmDlg('Minden adat törlése', '<p>Biztosan törölsz <b>minden</b> vagyontárgyat, kategóriát és dokumentumot ebből a böngészőből?</p><div class="note warn">Ez nem vonható vissza. Ha szükséged lehet rá, előbb készíts mentést.</div>', 'Mindent törlök', true)) {
+          const keep = { theme: s.theme, eurHuf: s.eurHuf }; state = emptyState(); Object.assign(state.settings, keep); ui.open.clear(); await store.clearFiles(); m._close(); commit('Minden adat törölve');
+        }
+      };
+      if (focusRate) setTimeout(() => { r.focus(); r.select(); }, 80);
+    }
+  });
+}
+
+/* ============================================================
+   Toast
+   ============================================================ */
+let toastT;
+function toast(msg, err) { const t = $('#toast'); t.className = 'toast' + (err ? ' err' : ''); t.innerHTML = icon(err ? 'alert' : 'check') + esc(msg); requestAnimationFrame(() => t.classList.add('on')); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+
+/* ============================================================
+   Kalkulátor
+   ============================================================ */
+const calc = { tab: 'basic', acc: null, op: null, cur: '0', fresh: true, expr: '', conv: { amount: null, dir: 'e2h' }, pct: { base: null, p: null }, diff: { a: null, b: null } };
+document.addEventListener('focusin', e => {
+  const el = e.target;
+  if (el.matches && el.matches('input.num') && !el.readOnly && !el.closest('#calc')) { lastNum = el; renderCalcTarget(); }
+});
+function toggleCalc() { const c = $('#calc'); c.hidden = !c.hidden; if (!c.hidden) renderCalc(); }
+function calcResult() {
+  if (calc.tab === 'basic') return Number(calc.cur);
+  if (calc.tab === 'conv') { const a = calc.conv.amount; if (!isNum(a)) return null; return calc.conv.dir === 'e2h' ? a * rate() : (rate() ? a / rate() : null); }
+  if (calc.tab === 'pct') { const { base, p } = calc.pct; return isNum(base) && isNum(p) ? base * p / 100 : null; }
+  if (calc.tab === 'diff') { const { a, b } = calc.diff; return isNum(a) && isNum(b) ? b - a : null; }
+}
+const cIn = (key, label, val, suffix) => `<label class="fld"><span>${label}</span><span class="inp-wrap"><input class="inp" data-cin="${key}" inputmode="decimal" value="${esc(fmtIn(val))}">${suffix ? `<em>${suffix}</em>` : ''}</span></label>`;
+function renderCalc() {
+  const c = $('#calc'); let body = '';
+  if (calc.tab === 'basic') {
+    body = `<div class="c-disp"><small>${esc(calc.expr)}</small><div data-cres>${esc(dispNum(calc.cur))}</div></div>
+      <div class="keys">${[['C','fn'],['←','fn'],['%','fn'],['÷','op'],['7'],['8'],['9'],['×','op'],['4'],['5'],['6'],['−','op'],['1'],['2'],['3'],['+','op'],['0','w2'],[','],['=','eq']].map(([k, cl]) => `<button type="button" data-key="${k}" class="${cl || ''}">${k}</button>`).join('')}</div>`;
+  } else if (calc.tab === 'conv') {
+    body = `<div class="seg full" style="margin-top:10px;height:36px"><button type="button" data-cdir="e2h" class="${calc.conv.dir === 'e2h' ? 'on' : ''}">EUR → Ft</button><button type="button" data-cdir="h2e" class="${calc.conv.dir === 'h2e' ? 'on' : ''}">Ft → EUR</button></div>
+      ${cIn('conv.amount', 'Összeg', calc.conv.amount, calc.conv.dir === 'e2h' ? 'EUR' : 'Ft')}<p class="hint">Árfolyam: 1 EUR = ${grp(rate(), decimalsOf(rate()))} Ft (a Beállításokban módosítható)</p>`;
+  } else if (calc.tab === 'pct') {
+    body = `${cIn('pct.base', 'Alapérték (pl. ingatlan értéke)', calc.pct.base)}${cIn('pct.p', 'Százalék', calc.pct.p, '%')}`;
+  } else {
+    body = `${cIn('diff.a', 'Megszerzéskori érték', calc.diff.a)}${cIn('diff.b', 'Aktuális érték', calc.diff.b)}`;
+  }
+  c.innerHTML = `<div class="calc-head"><b>${icon('calc')} Kalkulátor</b><button class="icon-btn sm" data-c="close" title="Kalkulátor bezárása">${icon('x')}</button></div>
+    <div class="seg full">${[['basic', 'Alap'], ['conv', 'Átváltás'], ['pct', 'Százalék'], ['diff', 'Különbség']].map(([k, l]) => `<button type="button" data-ctab="${k}" class="${calc.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <div class="c-body">${body}</div>${calc.tab !== 'basic' ? '<div class="c-res" data-cresbox></div>' : ''}
+    <div class="calc-foot"><div class="calc-target" data-ctarget></div><button class="btn sm primary" data-c="insert">${icon('download','sm')} Beillesztés a mezőbe</button><button class="btn sm ghost" data-c="copy">${icon('copy','sm')} Másolás</button></div>`;
+  updateCalcRes(); renderCalcTarget();
+}
+function dispNum(s) { if (s === '' || s === '-') return s || '0'; const n = Number(s); if (!isFinite(n)) return 'Hiba'; const [i, f] = String(s).split('.'); return grp(Number(i), 0) .replace(/^-?0$/, i) + (String(s).includes('.') ? ',' + (f || '') : ''); }
+function updateCalcRes() {
+  const box = $('[data-cresbox]'); if (!box) return; const r = calcResult();
+  let extra = '';
+  if (calc.tab === 'diff' && r != null && calc.diff.a) extra = `<small>${r >= 0 ? '+' : ''}${grp(r / calc.diff.a * 100, 2)}% változás</small>`;
+  if (calc.tab === 'pct' && r != null) extra = `<small>${grp(calc.pct.p, decimalsOf(calc.pct.p))}% a(z) ${grp(calc.pct.base, decimalsOf(calc.pct.base))} összegből</small>`;
+  const cur = calc.tab === 'conv' ? (calc.conv.dir === 'e2h' ? ' Ft' : ' EUR') : '';
+  box.innerHTML = `<small>Eredmény</small><div>${r == null ? '—' : (r >= 0 && calc.tab === 'diff' ? '+' : '') + grp(round2(r), Math.abs(r % 1) > 0.004 ? 2 : 0) + cur}</div>${extra}`;
+}
+function renderCalcTarget() {
+  const t = $('[data-ctarget]'); const ins = $('#calc [data-c=insert]'); if (!t) return;
+  const ok = lastNum && document.contains(lastNum);
+  if (ok) { const lbl = lastNum.closest('.fld')?.querySelector('span')?.textContent || 'mező'; t.innerHTML = `Cél: <b>${esc(lbl)}</b>`; }
+  else t.textContent = 'Beillesztéshez kattints előbb egy összeg mezőbe a szerkesztőben.';
+  ins.disabled = !ok;
+}
+function calcPress(k) {
+  const compute = (a, b, op) => op === '+' ? a + b : op === '−' ? a - b : op === '×' ? a * b : op === '÷' ? (b === 0 ? NaN : a / b) : b;
+  const clean = v => String(Number(Number(v).toFixed(10)));
+  if (/^\d$/.test(k)) { if (calc.fresh) { calc.cur = k; calc.fresh = false; } else if (calc.cur.replace(/[-.]/g, '').length < 15) calc.cur = calc.cur === '0' ? k : calc.cur + k; }
+  else if (k === ',' || k === '.') { if (calc.fresh) { calc.cur = '0.'; calc.fresh = false; } else if (!calc.cur.includes('.')) calc.cur += '.'; }
+  else if (k === 'C') { Object.assign(calc, { acc: null, op: null, cur: '0', fresh: true, expr: '' }); }
+  else if (k === '←') { if (!calc.fresh) { calc.cur = calc.cur.length > 1 ? calc.cur.slice(0, -1) : '0'; if (calc.cur === '-') calc.cur = '0'; } }
+  else if (k === '%') { calc.cur = clean(Number(calc.cur) / 100); calc.fresh = false; }
+  else if (['+', '−', '×', '÷'].includes(k)) {
+    const v = Number(calc.cur);
+    if (calc.acc == null || calc.op == null) calc.acc = v; else if (!calc.fresh) calc.acc = compute(calc.acc, v, calc.op);
+    calc.op = k; calc.fresh = true; calc.cur = clean(calc.acc); calc.expr = dispNum(calc.cur) + ' ' + k;
+  }
+  else if (k === '=') {
+    if (calc.op != null) { const v = Number(calc.cur); const r = compute(calc.acc, v, calc.op); calc.expr = dispNum(clean(calc.acc)) + ' ' + calc.op + ' ' + dispNum(calc.cur) + ' ='; calc.cur = isFinite(r) ? clean(r) : '0'; if (!isFinite(r)) calc.expr = 'Nullával nem lehet osztani'; calc.acc = null; calc.op = null; calc.fresh = true; }
+  }
+  const d = $('[data-cres]'); if (d) { d.textContent = dispNum(calc.cur); d.previousElementSibling.textContent = calc.expr; }
+}
+$('#calc').addEventListener('click', async e => {
+  const k = e.target.closest('[data-key]'); if (k) return calcPress(k.dataset.key);
+  const t = e.target.closest('[data-ctab]'); if (t) { calc.tab = t.dataset.ctab; return renderCalc(); }
+  const dir = e.target.closest('[data-cdir]'); if (dir) { calc.conv.dir = dir.dataset.cdir; return renderCalc(); }
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  if (b.dataset.c === 'close') { $('#calc').hidden = true; return; }
+  const r = calcResult(); if (r == null || !isFinite(r)) return toast('Nincs eredmény', true);
+  const v = round2(r);
+  if (b.dataset.c === 'copy') { try { await navigator.clipboard.writeText(String(v).replace('.', ',')); toast('Vágólapra másolva'); } catch { toast('A másolás nem sikerült', true); } }
+  if (b.dataset.c === 'insert') {
+    if (!lastNum || !document.contains(lastNum)) return toast('Kattints előbb egy összeg mezőbe', true);
+    lastNum.value = fmtIn(v); lastNum.dispatchEvent(new Event('input', { bubbles: true }));
+    lastNum.classList.add('flash'); toast('Beillesztve');
+  }
+});
+$('#calc').addEventListener('input', e => {
+  const el = e.target; if (!el.dataset.cin) return; const [g, f] = el.dataset.cin.split('.'); calc[g][f] = parseNum(el.value); updateCalcRes();
+});
+$('#calc').addEventListener('focusout', e => { const el = e.target; if (el.dataset && el.dataset.cin) { const v = parseNum(el.value); if (v != null) el.value = fmtIn(v); } });
+
+/* ============================================================
+   Billentyűk
+   ============================================================ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const layers = $$('.modal-layer'); if (layers.length) { layers[layers.length - 1]._close(); return; }
+    if (!$('#calc').hidden && $('#calc').contains(document.activeElement)) { $('#calc').hidden = true; return; }
+    if (draft) { closeEditor(); return; }
+    if (!$('#calc').hidden) { $('#calc').hidden = true; return; }
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (draft && !$$('.modal-layer').length) saveDraft(); else downloadBackup(); return; }
+  const c = $('#calc');
+  if (!c.hidden && calc.tab === 'basic' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const tag = (document.activeElement || {}).tagName;
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || $$('.modal-layer').length) return;
+    const map = { '+': '+', '-': '−', '*': '×', '/': '÷', 'Enter': '=', '=': '=', 'Backspace': '←', 'Delete': 'C', ',': ',', '.': ',', '%': '%' };
+    const k = /^\d$/.test(e.key) ? e.key : map[e.key];
+    if (k) { e.preventDefault(); calcPress(k); }
+  }
+});
+
+/* ============================================================
+   Excel export – saját, függőség nélküli XLSX-író (ZIP + SpreadsheetML)
+   ============================================================ */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u) { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC_T[(c ^ u[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files) {
+  const enc = new TextEncoder(), chunks = [], central = []; let off = 0;
+  const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  for (const f of files) {
+    const name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true); lh.setUint16(10, time, true); lh.setUint16(12, date, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    chunks.push(new Uint8Array(lh.buffer), name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, time, true); ch.setUint16(14, date, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true); ch.setUint32(38, 0, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    off += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((s, c) => s + c.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+const xesc = s => String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const colL = i => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+function excelDate(iso) { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); if (!m) return null; return (Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(1899, 11, 30)) / 864e5; }
+const XS = { h: 1, wrap: 2, int: 3, dec: 4, date: 5, title: 6, note: 7, tl: 8, ti: 9, td: 10, txt: 11, pct: 12 };
+function sheetXML(rows, { widths = [], freeze = 0, filter = null } = {}) {
+  let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
+  x += '<sheetViews><sheetView workbookViewId="0">' + (freeze ? `<pane ySplit="${freeze}" topLeftCell="A${freeze + 1}" activePane="bottomLeft" state="frozen"/>` : '') + '</sheetView></sheetViews><sheetFormatPr defaultRowHeight="16"/>';
+  if (widths.length) x += '<cols>' + widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('') + '</cols>';
+  x += '<sheetData>';
+  rows.forEach((row, ri) => {
+    const r = ri + 1; x += `<row r="${r}">`;
+    (row || []).forEach((cell, ci) => {
+      if (cell == null) return; if (typeof cell !== 'object') cell = { v: cell };
+      const ref = colL(ci) + r, s = cell.s ? ` s="${cell.s}"` : ''; let v = cell.v;
+      if (v == null || v === '') { if (cell.s) x += `<c r="${ref}"${s}/>`; return; }
+      if (cell.t === 'd') { const n = excelDate(v); if (n != null) { x += `<c r="${ref}"${s}><v>${n}</v></c>`; return; } }
+      if (typeof v === 'number' && isFinite(v)) x += `<c r="${ref}"${s}><v>${v}</v></c>`;
+      else x += `<c r="${ref}"${s} t="inlineStr"><is><t xml:space="preserve">${xesc(v)}</t></is></c>`;
+    });
+    x += '</row>';
+  });
+  x += '</sheetData>' + (filter ? `<autoFilter ref="${filter}"/>` : '') + '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/></worksheet>';
+  return x;
+}
+const STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="3"><numFmt numFmtId="164" formatCode="#,##0"/><numFmt numFmtId="165" formatCode="#,##0.00"/><numFmt numFmtId="166" formatCode="yyyy\\.mm\\.dd\\."/></numFmts>
+<fonts count="4"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="15"/><name val="Calibri"/><family val="2"/></font><font><i/><sz val="10"/><color rgb="FF6B6F76"/><name val="Calibri"/><family val="2"/></font></fonts>
+<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE6F4C4"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF1F2EC"/><bgColor indexed="64"/></patternFill></fill></fills>
+<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left/><right/><top/><bottom style="thin"><color rgb="FFB9BDB0"/></bottom><diagonal/></border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="13">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
+<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="top"/></xf>
+<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="top"/></xf>
+<xf numFmtId="166" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="left" vertical="top"/></xf>
+<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+<xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>
+<xf numFmtId="164" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/>
+<xf numFmtId="165" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="top"/></xf>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+function buildXlsx(sheets) {
+  const files = [];
+  files.push({ name: '[Content_Types].xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>` });
+  files.push({ name: '_rels/.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>` });
+  files.push({ name: 'docProps/core.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>Vagyonnyilvántartás</dc:title><dc:creator>Lili vagyonnyilvántartója</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().slice(0, 19)}Z</dcterms:created></cp:coreProperties>` });
+  const dn = sheets.map((s, i) => s.filter ? `<definedName name="_xlnm._FilterDatabase" localSheetId="${i}" hidden="1">'${xesc(s.name.replace(/'/g, "''"))}'!${s.filter.replace(/([A-Z]+)(\d+)/g, '$$$1$$$2')}</definedName>` : '').join('');
+  files.push({ name: 'xl/workbook.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>${sheets.map((s, i) => `<sheet name="${xesc(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets>${dn ? `<definedNames>${dn}</definedNames>` : ''}</workbook>` });
+  files.push({ name: 'xl/_rels/workbook.xml.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` });
+  files.push({ name: 'xl/styles.xml', data: STYLES_XML });
+  sheets.forEach((s, i) => files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: sheetXML(s.rows, s) }));
+  return zipStore(files);
+}
+function exportExcel() {
+  const R = rate(), vd = state.settings.valuationDate, t = totals();
+  const yn = b => b ? 'Igen' : 'Nem';
+  const mc = (v, cur) => ({ v: isNum(v) ? round2(v) : null, s: cur === 'EUR' ? XS.dec : XS.int });
+  const hufc = v => ({ v: isNum(v) ? Math.round(v) : null, s: XS.int });
+  const dc = v => ({ v: v || null, t: 'd', s: XS.date });
+  const tx = v => ({ v: v || null, s: XS.txt });
+  const wr = v => ({ v: v || null, s: XS.wrap });
+  const pc = v => ({ v: isNum(v) ? v : null, s: XS.txt });
+  const docsTxt = a => (a.documents || []).map(d => [optLabel('docType', d.type), d.name, safeUrl(d.url) || d.url, d.fileId ? `helyi fájl: ${d.fileName}` : '', d.note].filter(Boolean).join(' – ')).join('\n');
+  const info = `Értékelési dátum: ${fmtDate(vd)} · Árfolyam: 1 EUR = ${grp(R, decimalsOf(R))} Ft · Export: ${new Date().toLocaleString('hu-HU')}`;
+  const table = (name, title, head, widths, dataRows, note) => {
+    const rows = [[{ v: title, s: XS.title }], [{ v: info, s: XS.note }], note ? [{ v: note, s: XS.note }] : [], head.map(h => ({ v: h, s: XS.h }))];
+    rows.push(...dataRows);
+    if (!dataRows.length) rows.push([{ v: 'Nincs rögzített tétel.', s: XS.note }]);
+    const hr = 4; return { name, rows, widths, freeze: hr, filter: dataRows.length ? `A${hr}:${colL(head.length - 1)}${hr + dataRows.length}` : null };
+  };
+  const sheets = [];
+  // 1. Összesítés
+  const sr = [[{ v: 'Lili vagyonnyilvántartója – Összesítés', s: XS.title }], [{ v: info, s: XS.note }], [],
+    [{ v: 'Megnevezés', s: XS.h }, { v: 'Érték (Ft)', s: XS.h }, { v: 'Megjegyzés', s: XS.h }]];
+  const line = (l, v, n, tot) => sr.push([{ v: l, s: tot ? XS.tl : XS.txt }, { v: Math.round(v), s: tot ? XS.ti : XS.int }, { v: n || null, s: tot ? XS.tl : XS.wrap }]);
+  line('Teljes nyilvántartott vagyon (bruttó)', t.total, `${t.n} tétel`, true);
+  line('Magyarországi vagyon', t.HU); line('Németországi vagyon', t.DE);
+  line('Likvid vagyon (azonnal hozzáférhető)', t.liquid); line('Lekötött pénzeszközök', t.locked); line('Korlátozottan hozzáférhető pénzeszközök', t.limited);
+  line('Forintban nyilvántartott tételek', t.huf); line('Euróban nyilvántartott tételek – forintra átszámítva', t.eurHuf, `${grp(round2(t.eur), 2)} EUR`);
+  line('Kötelezettségek', -t.liab); line('Nettó vagyon (kötelezettségekkel csökkentve)', t.net, null, true);
+  if (t.acqN) { line('Megszerzéskori érték (ahol ismert)', t.acqBase, `${t.acqN} tétel`); line('Ugyanezen tételek aktuális értéke', t.acqCur); line('Különbség', t.acqCur - t.acqBase, t.acqBase ? `${grp((t.acqCur - t.acqBase) / t.acqBase * 100, 1)}%` : ''); }
+  sr.push([], [{ v: 'Ország', s: XS.h }, { v: 'Kategória', s: XS.h }, { v: 'Tételek száma', s: XS.h }, { v: 'Érték (Ft)', s: XS.h }]);
+  state.categories.forEach(c => { const n = state.assets.filter(a => a.categoryId === c.id).length; if (n) sr.push([tx(COUNTRIES[c.country].name), tx(c.name), { v: n, s: XS.int }, hufc(t.byCat[c.id] || 0)]); });
+  sr.push([], [{ v: 'Az értékek tájékoztató jellegűek (tulajdoni hányadra jutó vagy kézzel megadott értékek). Nem azonosak automatikusan a jogszabály szerinti adóalappal.', s: XS.note }]);
+  sheets.push({ name: 'Összesítés', rows: sr, widths: [52, 22, 34, 18] });
+  // 2-3. Ingatlanok
+  const reHead = ['Megnevezés', 'Település', 'Teljes cím', 'Helyrajzi szám / Flurstück', 'Ingatlan típusa', 'Tulajdonos', 'Tulajdonjog típusa', 'Tulajdoni hányad (%)', 'Haszonélvezeti jog', 'Haszonélvező', 'Megszerzés dátuma', 'Megszerzés jogcíme', 'Megszerzéskori teljes érték', 'Megszerzett hányad megszerzéskori értéke', 'Pénznem', 'Aktuális teljes érték', 'Értékelés dátuma', 'Érték megállapítása', 'Hányadra jutó érték', 'Értékkorrekció', 'Kézi összesítési érték', 'Beszámít', 'Összesítésbe (eredeti pénznem)', 'Árfolyam', 'Összesítésbe (Ft)', 'Kapcsolódó kötelezettség (Ft)', 'Google Térkép', 'Dokumentumok', 'Megjegyzés', 'Hiányzó adatok'];
+  const reW = [26, 14, 30, 16, 14, 18, 22, 10, 12, 18, 13, 13, 16, 16, 8, 16, 13, 14, 16, 13, 14, 9, 18, 9, 17, 16, 30, 45, 35, 25];
+  const reRow = a => [tx(a.name), tx(a.settlement), wr(a.address), tx(a.parcel), tx(optLabel('propertyType', a.propertyType)), tx(a.ownerName), tx(optLabel('ownershipType', a.ownershipType)), pc(pctOf(a)), tx(optLabel('usufructExists', a.usufructExists)), tx(a.usufructHolder), dc(a.acqDate), tx(optLabel('acqTitle', a.acqTitle)), mc(a.acqTotalValue, a.currency), mc(a.acqShareValue, a.currency), tx(a.currency), mc(grossOrig(a), a.currency), dc(a.valuationDate), tx(optLabel('valuationMethod', a.valuationMethod)), mc(shareOrig(a), a.currency), mc(a.adjustment, a.currency), mc(a.manualCounted, a.currency), tx(yn(a.include)), mc(countedOrig(a), a.currency), { v: a.currency === 'EUR' ? R : 1, s: XS.txt }, hufc(countedHUF(a)), hufc(liabFor(a).reduce((s, l) => s + (toHUF(l.amount, l.currency) || 0), 0) || null), wr(safeUrl(a.mapsUrl) || a.mapsUrl), wr(docsTxt(a)), wr(a.notes), wr(missingFields(a).join(', '))];
+  ['HU', 'DE'].forEach(c => sheets.push(table(c === 'HU' ? 'Magyarországi ingatlanok' : 'Németországi ingatlanok', `${COUNTRIES[c].adj} ingatlanok`, reHead, reW, state.assets.filter(a => a.kind === 'realestate' && a.country === c).map(reRow))));
+  // 4. Bankszámlák
+  sheets.push(table('Bankszámlák – likviditás', 'Bankszámlák és likviditás', ['Ország', 'Kategória', 'Bank', 'Számla megnevezése', 'Számlatípus', 'Hozzáférhetőség', 'Egyenleg', 'Pénznem', 'Egyenleg dátuma', 'Tulajdoni hányad (%)', 'Lejárati dátum', 'Kézi összesítési érték', 'Beszámít', 'Összesítésbe (eredeti pénznem)', 'Árfolyam', 'Összesítésbe (Ft)', 'Dokumentumok', 'Megjegyzés'],
+    [12, 24, 16, 28, 16, 22, 16, 8, 13, 10, 13, 14, 9, 18, 9, 17, 40, 35],
+    state.assets.filter(a => a.kind === 'cash').map(a => [tx(COUNTRIES[a.country].name), tx(catById(a.categoryId)?.name), tx(a.bankName), tx(a.name), tx(optLabel('accountType', a.accountType)), tx(optLabel('liquidity', a.liquidity)), mc(a.value, a.currency), tx(a.currency), dc(a.valuationDate), pc(pctOf(a)), dc(a.maturityDate), mc(a.manualCounted, a.currency), tx(yn(a.include)), mc(countedOrig(a), a.currency), { v: a.currency === 'EUR' ? R : 1, s: XS.txt }, hufc(countedHUF(a)), wr(docsTxt(a)), wr(a.notes)])));
+  // 5. Értékpapírok
+  const secRows = [];
+  state.assets.filter(a => a.kind === 'securities').forEach(a => {
+    secRows.push([tx(COUNTRIES[a.country].name), tx(a.provider), tx(a.name), tx(itemsMode(a) ? 'Portfólió összesen (tételes)' : 'Portfólió (egy összegként)'), tx(itemsMode(a) ? '' : a.name), tx(itemsMode(a) ? '' : optLabel('secType', a.secType)), tx(itemsMode(a) ? '' : a.isin), {}, {}, tx(a.currency), mc(grossOrig(a), a.currency), dc(a.acqDate), mc(itemsMode(a) ? (acqShare(a) != null ? acqShare(a) / (pctOf(a) / 100 || 1) : null) : a.costBasis, a.currency), pc(pctOf(a)), dc(a.valuationDate), tx(yn(a.include)), mc(countedOrig(a), a.currency), hufc(countedHUF(a)), wr(docsTxt(a)), wr(a.notes)]);
+    if (itemsMode(a)) (a.holdings || []).forEach(h => secRows.push([tx(COUNTRIES[a.country].name), tx(a.provider), tx(a.name), tx('  Tétel'), tx(h.name), tx(optLabel('secType', h.type)), tx(h.isin), { v: isNum(h.qty) ? h.qty : null, s: XS.dec }, mc(h.unitPrice, a.currency), tx(a.currency), mc(holdingValue(h), a.currency), dc(h.acqDate), mc(h.costBasis, a.currency), {}, {}, {}, {}, {}, {}, {}]));
+  });
+  sheets.push(table('Értékpapírok', 'Értékpapírok', ['Ország', 'Szolgáltató / bank', 'Portfólió', 'Sor típusa', 'Értékpapír megnevezése', 'Típus', 'ISIN', 'Darabszám', 'Egységár', 'Deviza', 'Összérték', 'Megszerzés dátuma', 'Bekerülési érték', 'Tulajdoni hányad (%)', 'Értékelés dátuma', 'Beszámít', 'Összesítésbe (eredeti pénznem)', 'Összesítésbe (Ft)', 'Dokumentumok', 'Megjegyzés'],
+    [12, 16, 24, 24, 30, 14, 15, 11, 13, 8, 16, 13, 16, 10, 13, 9, 18, 17, 40, 35], secRows,
+    'A „Tétel” sorok a portfólió bontását mutatják; az összesítésbe számító érték csak a portfólió sorában szerepel, így nincs duplikáció.'));
+  // 6. Egyéb
+  sheets.push(table('Egyéb vagyonelemek', 'Egyéb vagyonelemek', ['Ország', 'Kategória', 'Megnevezés', 'Típus', 'Aktuális érték', 'Pénznem', 'Tulajdoni hányad (%)', 'Megszerzés dátuma', 'Megszerzéskori érték', 'Értékelés dátuma', 'Érték megállapítása', 'Kézi összesítési érték', 'Beszámít', 'Összesítésbe (eredeti pénznem)', 'Árfolyam', 'Összesítésbe (Ft)', 'Dokumentumok', 'Megjegyzés'],
+    [12, 22, 26, 18, 16, 8, 10, 13, 16, 13, 14, 14, 9, 18, 9, 17, 40, 35],
+    state.assets.filter(a => a.kind === 'other').map(a => [tx(COUNTRIES[a.country].name), tx(catById(a.categoryId)?.name), tx(a.name), tx(a.otherType), mc(a.value, a.currency), tx(a.currency), pc(pctOf(a)), dc(a.acqDate), mc(a.acqValue, a.currency), dc(a.valuationDate), tx(optLabel('valuationMethod', a.valuationMethod)), mc(a.manualCounted, a.currency), tx(yn(a.include)), mc(countedOrig(a), a.currency), { v: a.currency === 'EUR' ? R : 1, s: XS.txt }, hufc(countedHUF(a)), wr(docsTxt(a)), wr(a.notes)])));
+  // 7. Kötelezettségek
+  if (state.liabilities.length) sheets.push(table('Kötelezettségek', 'Kötelezettségek', ['Ország', 'Megnevezés', 'Hitelező', 'Kapcsolódó vagyontárgy', 'Összeg', 'Pénznem', 'Egyenleg dátuma', 'Levonandó', 'Összeg (Ft)', 'Megjegyzés'],
+    [12, 28, 18, 28, 16, 8, 13, 10, 17, 35],
+    state.liabilities.map(l => [tx(COUNTRIES[l.country].name), tx(l.name), tx(l.lender), tx(state.assets.find(a => a.id === l.assetId)?.name), mc(l.amount, l.currency), tx(l.currency), dc(l.date), tx(yn(l.include)), hufc(toHUF(l.amount, l.currency)), wr(l.note)])));
+  try { downloadBlob(buildXlsx(sheets), `vagyonnyilvantartas_${todayISO()}.xlsx`); toast('Excel-fájl letöltve'); }
+  catch (e) { toast('Az export nem sikerült: ' + e.message, true); }
+}
+
+/* ============================================================
+   Mintaadatok
+   ============================================================ */
+function sampleState() {
+  const s = emptyState(); s.settings.eurHuf = state.settings.eurHuf || 405; s.settings.theme = state.settings.theme;
+  const vd = s.settings.valuationDate;
+  const A = (o) => ({ ...clone(ASSET_DEFAULTS), id: uid(), valuationDate: vd, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), ...o, kind: s.categories.find(c => c.id === o.categoryId).type });
+  const doc = (type, name, url, note) => ({ id: uid(), type, name, url: url || '', note: note || '', fileId: null, fileName: '', fileSize: null, fileType: '' });
+  const lipcse = A({ name: 'Lipcse – Südvorstadt lakás', country: 'DE', categoryId: 'de-ing', currency: 'EUR', value: 260000, settlement: 'Leipzig', address: 'Kochstraße 18, 04275 Leipzig', propertyType: 'lakas', ownerName: 'Lili', ownershipType: 'resz', ownershipPct: 50, usufructExists: 'nem', acqDate: '2020-06-01', acqTitle: 'vasarlas', acqTotalValue: 210000, valuationMethod: 'becsles', notes: 'Bérbe adva, havi bérleti díj 950 EUR.' });
+  s.assets = [
+    A({ name: 'Szentendre ház', country: 'HU', categoryId: 'hu-ing', currency: 'HUF', value: 185000000, settlement: 'Szentendre', address: '2000 Szentendre, Dunakorzó 12.', parcel: '1234/5', propertyType: 'csaladi', ownerName: 'Lili', ownershipType: 'teljes', ownershipPct: 100, usufructExists: 'nem', acqDate: '2018-03-15', acqTitle: 'vasarlas', acqTotalValue: 98000000, valuationMethod: 'ertekbecsles', notes: 'Családi ház, jó állapotban, 2023-ban részleges felújítás (tető, nyílászárók).', documents: [doc('tulajdoni_lap', 'Tulajdoni lap 2024', '', 'Takarnet, 2024. febr. 10.'), doc('adasveteli', 'Adásvételi szerződés', '', '2018. márc. 15.'), doc('ertekbecsles', 'Értékbecslés 2023', '', 'OTP értékbecslő')] }),
+    A({ name: 'Szentendre – Tómellék utca', country: 'HU', categoryId: 'hu-ing', currency: 'HUF', value: 280000000, settlement: 'Szentendre', address: '2000 Szentendre, Tómellék utca 5.', propertyType: 'lakas', ownerName: 'Lili', ownershipType: 'resz', ownershipPct: 50, usufructExists: 'nem', acqDate: '2015-09-20', acqTitle: 'orokles', acqTotalValue: 120000000, valuationMethod: 'becsles' }),
+    A({ name: 'Budapest, Bartók Béla út – lakás', country: 'HU', categoryId: 'hu-ing', currency: 'HUF', value: 72000000, settlement: 'Budapest', address: '1114 Budapest, Bartók Béla út 40.', propertyType: 'lakas', ownerName: 'Lili', ownershipType: 'haszonelvezet', ownershipPct: 100, usufructExists: 'igen', usufructHolder: 'Lili', acqDate: '2021-01-12', acqTitle: 'ajandek', valuationMethod: 'becsles', manualCounted: 18000000, notes: 'Haszonélvezeti jog – a beszámított érték kézzel megadott példaszám.' }),
+    A({ name: 'OTP – napi folyószámla', country: 'HU', categoryId: 'hu-bank', currency: 'HUF', value: 5800000, bankName: 'OTP Bank', accountType: 'folyoszamla', liquidity: 'azonnal', valuationMethod: 'kivonat' }),
+    A({ name: 'OTP – lekötött megtakarítás', country: 'HU', categoryId: 'hu-lek', currency: 'HUF', value: 36720000, bankName: 'OTP Bank', accountType: 'lekotott', liquidity: 'lekotott', maturityDate: '2027-03-31', valuationMethod: 'kivonat' }),
+    A({ name: 'Prémium Magyar Állampapír', country: 'HU', categoryId: 'hu-ert', currency: 'HUF', value: 12000000, provider: 'Magyar Államkincstár', secMode: 'total', secType: 'kotveny', acqDate: '2023-05-10', costBasis: 11000000 }),
+    A({ name: 'Személyautó', country: 'HU', categoryId: 'hu-egy', currency: 'HUF', value: 6500000, otherType: 'Gépjármű', acqDate: '2022-08-01', acqValue: 8900000, valuationMethod: 'becsles' }),
+    lipcse,
+    A({ name: 'Német portfólió', country: 'DE', categoryId: 'de-ert', currency: 'EUR', provider: 'comdirect', secMode: 'items', acqDate: '2019-11-04', holdings: [
+      { id: uid(), name: 'iShares Core MSCI World UCITS ETF', type: 'etf', isin: 'IE00B4L5Y983', qty: 220, unitPrice: 105.4, totalOverride: null, acqDate: '2019-11-04', costBasis: 13200 },
+      { id: uid(), name: 'Allianz SE', type: 'reszveny', isin: 'DE0008404005', qty: 40, unitPrice: 255, totalOverride: null, acqDate: '2021-03-15', costBasis: 8000 },
+      { id: uid(), name: 'Szövetségi kötvény 2030', type: 'kotveny', isin: '', qty: null, unitPrice: null, totalOverride: 15000, acqDate: '2022-06-01', costBasis: 15400 }] }),
+    A({ name: 'Sparkasse – Girokonto', country: 'DE', categoryId: 'de-bank', currency: 'EUR', value: 8500, bankName: 'Sparkasse Leipzig', accountType: 'folyoszamla', liquidity: 'azonnal', valuationMethod: 'kivonat' }),
+    A({ name: 'Tagesgeld', country: 'DE', categoryId: 'de-bank', currency: 'EUR', value: 15000, bankName: 'ING Deutschland', accountType: 'megtakaritasi', liquidity: 'korlatozott', valuationMethod: 'kivonat' }),
+  ];
+  s.assets.find(a => a.secMode === 'items').value = round2(grossOrig(s.assets.find(a => a.secMode === 'items')));
+  s.liabilities = [{ id: uid(), name: 'Lakáshitel – Lipcse (Lili része)', lender: 'Sparkasse Leipzig', country: 'DE', assetId: lipcse.id, amount: 47500, currency: 'EUR', date: vd, note: 'A teljes hitel 95 000 EUR, ennek 50%-a.', include: true }];
+  return s;
+}
+async function loadSample() {
+  if (state.assets.length && !(await confirmDlg('Mintaadatok betöltése', '<p>A mintaadatok <b>lecserélik</b> a jelenlegi tételeket.</p><div class="note warn">Ha a mostani adataidra szükséged lehet, előbb mentsd el őket.</div>', 'Lecserélem', true))) return;
+  state = sampleState(); ui.open.clear(); commit('Mintaadatok betöltve');
+}
+
+/* ============================================================
+   Indítás
+   ============================================================ */
+(async function init() {
+  await store.init();
+  try { const saved = await store.get('state'); if (saved) state = normalizeState(saved); } catch (e) { console.warn(e); toast('A tárolt adatok nem olvashatók', true); }
+  try { const tab = localStorage.getItem('lili-vagyon:tab'); if (['HU', 'DE', 'ALL'].includes(tab)) ui.country = tab; } catch {}
+  if (store.ok && fsSupported) {
+    try {
+      const h = await store.get('fileHandle');
+      if (h) { linked.handle = h; linked.name = h.name; const p = await h.queryPermission({ mode: 'readwrite' }); linked.state = p === 'granted' ? 'ok' : 'needs-permission'; }
+    } catch (e) { console.warn(e); }
+  }
+  if (navigator.storage && navigator.storage.persist) { try { await navigator.storage.persist(); } catch {} }
+  if (!store.ok) toast('Figyelem: a böngésző nem engedi az IndexedDB-t, egyszerűbb tárolást használok', true);
+  render(); setSaveState('ok');
+  cleanupFiles();
+  // Offline működés webcímről (pl. iPad főképernyő): az alkalmazás fájljai helyben gyorsítótárazódnak.
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker', e));
+})();
+</script>
+</body>
+</html>
